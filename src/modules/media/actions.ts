@@ -58,19 +58,37 @@ export async function uploadImageAction(
   const admin = createAdminClient();
   const path = `${organization.id}/${entityType}/${entityId}/${safeFilename(file.name)}`;
   const bytes = new Uint8Array(await file.arrayBuffer());
-  const { error: upErr } = await admin.storage
-    .from(BUCKET)
-    .upload(path, bytes, { contentType: file.type, upsert: false });
-  if (upErr) {
-    return { error: "Upload failed. Make sure the 'media' Storage bucket exists." };
-  }
 
-  const { data: pub } = admin.storage.from(BUCKET).getPublicUrl(path);
-  const next = [...photos, pub.publicUrl];
-  if (table === "livestock_listings") {
-    await admin.from("livestock_listings").update({ photos: next }).eq("id", entityId);
-  } else {
-    await admin.from("meat_products").update({ photos: next }).eq("id", entityId);
+  // Wrap all Storage/DB I/O: a thrown error here must surface as a friendly
+  // message, never an unhandled 500 (the upload form is a core seller flow).
+  try {
+    const opts = { contentType: file.type, upsert: false };
+    let { error: upErr } = await admin.storage.from(BUCKET).upload(path, bytes, opts);
+
+    // Self-heal: if the bucket hasn't been provisioned on this project yet,
+    // create it (public, service-role) and retry once.
+    if (upErr && /bucket.*not.*found|not.*found/i.test(upErr.message ?? "")) {
+      await admin.storage.createBucket(BUCKET, { public: true });
+      ({ error: upErr } = await admin.storage.from(BUCKET).upload(path, bytes, opts));
+    }
+    if (upErr) {
+      console.error("uploadImageAction storage error:", upErr.message);
+      return { error: "Upload failed. Please try again in a moment." };
+    }
+
+    const { data: pub } = admin.storage.from(BUCKET).getPublicUrl(path);
+    const next = [...photos, pub.publicUrl];
+    const { error: dbErr } =
+      table === "livestock_listings"
+        ? await admin.from("livestock_listings").update({ photos: next }).eq("id", entityId)
+        : await admin.from("meat_products").update({ photos: next }).eq("id", entityId);
+    if (dbErr) {
+      console.error("uploadImageAction db error:", dbErr.message);
+      return { error: "Upload failed. Please try again in a moment." };
+    }
+  } catch (e) {
+    console.error("uploadImageAction threw:", e instanceof Error ? e.message : String(e));
+    return { error: "Upload failed. Please try again in a moment." };
   }
 
   revalidatePath(`/dashboard/listings/${entityType === "product" ? "meat/" : ""}${entityId}`);
