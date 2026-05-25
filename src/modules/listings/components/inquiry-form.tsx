@@ -44,21 +44,27 @@ export function InquiryForm({
 
       <div className="space-y-2">
         <Label htmlFor="name">Your name</Label>
-        <Input id="name" name="name" required />
+        <Input id="name" name="name" defaultValue={state.values?.name ?? ""} required />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" name="email" type="email" />
+          <Input id="email" name="email" type="email" defaultValue={state.values?.email ?? ""} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="phone">Phone</Label>
-          <Input id="phone" name="phone" type="tel" />
+          <Input id="phone" name="phone" type="tel" defaultValue={state.values?.phone ?? ""} />
         </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="message">Message</Label>
-        <Textarea id="message" name="message" rows={3} placeholder="I'm interested in…" />
+        <Textarea
+          id="message"
+          name="message"
+          rows={3}
+          placeholder="I'm interested in…"
+          defaultValue={state.values?.message ?? ""}
+        />
       </div>
       {state.error && (
         <p className="text-sm text-destructive" role="alert">

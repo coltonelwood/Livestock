@@ -26,7 +26,10 @@ Required:
 - ☐ `ANTHROPIC_API_KEY`
 - ☐ `NEXT_PUBLIC_APP_URL` (production URL)
 - ☐ `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` (durable rate
-  limiting). **Without these, public AI endpoints fail closed (deny).**
+  limiting). **Required for production.** Without them: anonymous AI chat fails
+  closed (deny, to protect model spend), while non-AI public forms (listing
+  inquiry, marketing contact) fail OPEN so real leads aren't dropped — meaning
+  those forms have **no abuse protection** until this is set.
 
 Billing (Stripe) — optional; without it orgs stay on the free tier:
 - ☐ `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
@@ -75,7 +78,8 @@ Set each for Production (and Preview if used). Never commit real values.
 - ☐ Create an Upstash Redis database and set `UPSTASH_REDIS_REST_URL` /
   `UPSTASH_REDIS_REST_TOKEN`; verify chat/inquiry/contact rate limiting works
   (durable limiter is implemented in `src/lib/ratelimit.ts`).
-- ☐ Add alerting on Redis availability (public endpoints fail closed without it).
+- ☐ Add alerting on Redis availability. Without it, anonymous AI chat fails
+  closed; non-AI inquiry/contact forms fail open (unprotected from spam).
 - ☐ Set security headers (CSP/HSTS) and review the API route's CORS.
 - ☐ Configure AI spend alerts and a per-org usage cap.
 - ☐ Configure Storage bucket policies before enabling document uploads.

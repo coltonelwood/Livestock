@@ -35,19 +35,24 @@ export function ContactForm() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="name">Name</Label>
-        <Input id="name" name="name" required />
+        <Input id="name" name="name" defaultValue={state.values?.name ?? ""} required />
       </div>
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" required />
+        <Input id="email" name="email" type="email" defaultValue={state.values?.email ?? ""} required />
       </div>
       <div className="space-y-2">
         <Label htmlFor="business">Business</Label>
-        <Input id="business" name="business" placeholder="Ranch, sale barn, etc." />
+        <Input
+          id="business"
+          name="business"
+          placeholder="Ranch, sale barn, etc."
+          defaultValue={state.values?.business ?? ""}
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="message">How can we help?</Label>
-        <Textarea id="message" name="message" rows={4} />
+        <Textarea id="message" name="message" rows={4} defaultValue={state.values?.message ?? ""} />
       </div>
       {state.error && (
         <p className="text-sm text-destructive" role="alert">

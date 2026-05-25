@@ -70,6 +70,19 @@ export async function POST(request: NextRequest) {
       );
 
   if (!gate.allowed) {
+    // Distinguish "we genuinely hit the limit" (429) from "the limiter store is
+    // down so we fail closed on AI to protect model spend" (503 + unavailable
+    // flag). The widget renders a fallback contact form for the unavailable case.
+    if (gate.unavailable) {
+      return NextResponse.json(
+        {
+          unavailable: true,
+          reply:
+            "Chat is temporarily unavailable. Please use the contact form or call the seller.",
+        },
+        { status: 503 },
+      );
+    }
     return NextResponse.json(
       {
         reply:

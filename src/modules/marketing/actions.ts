@@ -16,12 +16,24 @@ const contactSchema = z.object({
   website: z.string().max(0).optional(),
 });
 
-export type ContactState = { error?: string; success?: boolean };
+export type ContactState = {
+  error?: string;
+  success?: boolean;
+  // Echoed back on failure so a failed submit never wipes what was typed.
+  values?: { name?: string; email?: string; business?: string; message?: string };
+};
 
 export async function submitContactAction(
   _prev: ContactState,
   formData: FormData,
 ): Promise<ContactState> {
+  const values = {
+    name: String(formData.get("name") ?? ""),
+    email: String(formData.get("email") ?? ""),
+    business: String(formData.get("business") ?? ""),
+    message: String(formData.get("message") ?? ""),
+  };
+
   const parsed = contactSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
@@ -33,16 +45,19 @@ export async function submitContactAction(
     if (parsed.error.issues.some((i) => i.path[0] === "website")) {
       return { success: true };
     }
-    return { error: parsed.error.issues[0]?.message ?? "Please check your details." };
+    return { error: parsed.error.issues[0]?.message ?? "Please check your details.", values };
   }
 
+  // Non-AI public form — FAIL OPEN when the rate-limit store is unavailable so a
+  // down/missing Redis can't silently drop demo requests. Durable limiting still
+  // applies whenever Upstash is configured.
   const ip = clientIp(await headers());
   const gate = await enforce(
     [{ name: "contact", identifier: ip }],
-    { failOpen: false },
+    { failOpen: true },
   );
   if (!gate.allowed) {
-    return { error: "Too many requests. Please try again later." };
+    return { error: "Too many requests. Please try again later.", values };
   }
 
   const admin = createAdminClient();
@@ -52,7 +67,7 @@ export async function submitContactAction(
     business: parsed.data.business || null,
     message: parsed.data.message || null,
   });
-  if (error) return { error: "Something went wrong. Please try again." };
+  if (error) return { error: "Something went wrong. Please try again.", values };
 
   return { success: true };
 }

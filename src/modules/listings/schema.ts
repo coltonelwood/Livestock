@@ -48,5 +48,10 @@ export const inquirySchema = z.object({
   company: z.string().max(0).optional(),
 });
 
-export type ListingActionState = { error?: string };
-export type InquiryState = { error?: string; success?: boolean };
+export type ListingActionState = { error?: string; saved?: boolean };
+export type InquiryState = {
+  error?: string;
+  success?: boolean;
+  // Echoed back on failure so the form doesn't wipe what the buyer typed.
+  values?: { name?: string; email?: string; phone?: string; message?: string };
+};

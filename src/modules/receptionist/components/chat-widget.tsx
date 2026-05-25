@@ -1,13 +1,22 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { Send, Bot } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import {
+  captureChatLeadAction,
+  type ChatLeadState,
+} from "@/modules/receptionist/actions";
 
 type Msg = { role: "visitor" | "assistant"; content: string };
+
+const UNAVAILABLE_MESSAGE =
+  "Chat is temporarily unavailable. Please use the contact form or call the seller.";
 
 export function ChatWidget({
   organizationId,
@@ -26,6 +35,7 @@ export function ChatWidget({
   ]);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
+  const [unavailable, setUnavailable] = useState(false);
   const conversationId = useRef<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -48,20 +58,21 @@ export function ChatWidget({
           message: text,
         }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (data.conversationId) conversationId.current = data.conversationId;
+      // 503 + unavailable flag = the service can't run the assistant right now;
+      // surface a clear message and drop in the fallback contact form.
+      if (res.status === 503 || data.unavailable) setUnavailable(true);
       setMessages((m) => [
         ...m,
         {
           role: "assistant",
-          content: data.reply ?? "Sorry, something went wrong. Please try again.",
+          content: data.reply ?? UNAVAILABLE_MESSAGE,
         },
       ]);
     } catch {
-      setMessages((m) => [
-        ...m,
-        { role: "assistant", content: "Connection issue — please try again." },
-      ]);
+      setUnavailable(true);
+      setMessages((m) => [...m, { role: "assistant", content: UNAVAILABLE_MESSAGE }]);
     } finally {
       setPending(false);
       requestAnimationFrame(() => {
@@ -110,6 +121,9 @@ export function ChatWidget({
             </div>
           </div>
         )}
+        {unavailable && (
+          <FallbackContactForm organizationId={organizationId} />
+        )}
       </div>
 
       <form onSubmit={send} className="flex gap-2 border-t p-3">
@@ -119,12 +133,67 @@ export function ChatWidget({
           placeholder="Type a message…"
           maxLength={2000}
           aria-label="Message"
+          disabled={unavailable}
         />
-        <Button type="submit" size="icon" disabled={pending || !input.trim()}>
+        <Button type="submit" size="icon" disabled={pending || unavailable || !input.trim()}>
           <Send className="size-4" />
           <span className="sr-only">Send</span>
         </Button>
       </form>
     </div>
+  );
+}
+
+/** Shown inside the chat when the assistant can't run — captures the lead anyway. */
+function FallbackContactForm({ organizationId }: { organizationId: string }) {
+  const [state, action, pending] = useActionState<ChatLeadState, FormData>(
+    captureChatLeadAction,
+    {},
+  );
+
+  if (state.success) {
+    return (
+      <div className="rounded-md border bg-secondary p-3 text-sm" role="status">
+        Thanks — your details were sent to the seller. They&apos;ll be in touch soon.
+      </div>
+    );
+  }
+
+  return (
+    <form action={action} className="space-y-2 rounded-md border bg-background p-3">
+      <input type="hidden" name="organizationId" value={organizationId} />
+      <div className="hidden" aria-hidden="true">
+        <label>
+          Company
+          <input name="company" tabIndex={-1} autoComplete="off" />
+        </label>
+      </div>
+      <p className="text-sm font-medium">Leave your details</p>
+      <div className="space-y-1">
+        <Label htmlFor="fallback-name" className="text-xs">Your name</Label>
+        <Input id="fallback-name" name="name" defaultValue={state.values?.name ?? ""} required />
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="fallback-contact" className="text-xs">Phone or email</Label>
+        <Input id="fallback-contact" name="contact" defaultValue={state.values?.contact ?? ""} required />
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="fallback-message" className="text-xs">Message (optional)</Label>
+        <Textarea
+          id="fallback-message"
+          name="message"
+          rows={2}
+          defaultValue={state.values?.message ?? ""}
+        />
+      </div>
+      {state.error && (
+        <p className="text-sm text-destructive" role="alert">
+          {state.error}
+        </p>
+      )}
+      <Button type="submit" size="sm" disabled={pending} className="w-full">
+        {pending ? "Sending…" : "Send to seller"}
+      </Button>
+    </form>
   );
 }
