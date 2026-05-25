@@ -19,8 +19,8 @@ export default async function AppLayout({
     getProfile(),
   ]);
 
-  const displayName =
-    profile?.full_name || profile?.email || "Account";
+  const displayName = profile?.full_name || profile?.email || "Account";
+  const isPlatformAdmin = profile?.platform_role === "platform_admin";
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
@@ -59,6 +59,7 @@ export default async function AppLayout({
       <DashboardBottomNav
         memberships={memberships}
         currentId={current.organization.id}
+        isPlatformAdmin={isPlatformAdmin}
       />
     </div>
   );

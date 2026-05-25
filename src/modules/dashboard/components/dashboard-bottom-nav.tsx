@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Tag, Package, Target, Menu, X, LogOut } from "lucide-react";
+import { LayoutDashboard, Tag, Package, Target, Menu, X, LogOut, ShieldCheck } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { dashboardNav } from "@/modules/dashboard/nav";
@@ -23,9 +23,11 @@ const primaryHrefs = new Set(primary.map((p) => p.href));
 export function DashboardBottomNav({
   memberships,
   currentId,
+  isPlatformAdmin = false,
 }: {
   memberships: Membership[];
   currentId: string;
+  isPlatformAdmin?: boolean;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -66,6 +68,16 @@ export function DashboardBottomNav({
                     {i.title}
                   </Link>
                 ))}
+              {isPlatformAdmin && (
+                <Link
+                  href="/admin"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 rounded-lg border border-border p-3 text-sm font-medium"
+                >
+                  <ShieldCheck className="size-5 text-muted-foreground" />
+                  Admin
+                </Link>
+              )}
             </nav>
             <form action={logoutAction} className="mt-3">
               <button type="submit" className="flex w-full items-center justify-center gap-2 rounded-lg border border-border p-3 text-sm font-medium">

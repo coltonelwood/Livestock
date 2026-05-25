@@ -12,7 +12,7 @@ import { DEFAULT_GREETING } from "@/lib/ai/receptionist";
 import { createClient } from "@/lib/supabase/server";
 import { requireOrg } from "@/modules/organizations/context";
 
-export const metadata: Metadata = { title: "AI receptionist" };
+export const metadata: Metadata = { title: "Lead Assistant" };
 
 export default async function ReceptionistPage() {
   const { organization } = await requireOrg();
@@ -40,8 +40,8 @@ export default async function ReceptionistPage() {
   return (
     <>
       <PageHeader
-        title="AI receptionist"
-        description="Set up the assistant that answers questions and captures leads on your storefront and listings."
+        title="Lead Assistant"
+        description="Catches buyers you miss — answers common questions, gets a name and phone number, and saves the lead."
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -49,7 +49,7 @@ export default async function ReceptionistPage() {
           <Card>
             <CardHeader>
               <CardTitle>Assistant settings</CardTitle>
-              <CardDescription>How your receptionist greets and qualifies visitors.</CardDescription>
+              <CardDescription>How it greets buyers and what it asks.</CardDescription>
             </CardHeader>
             <CardContent>
               <SettingsForm action={saveAgentAction}>
@@ -98,7 +98,7 @@ export default async function ReceptionistPage() {
           <Card>
             <CardHeader>
               <CardTitle>Business profile & FAQ</CardTitle>
-              <CardDescription>The facts your receptionist is allowed to share.</CardDescription>
+              <CardDescription>The only facts it&apos;s allowed to share.</CardDescription>
             </CardHeader>
             <CardContent>
               <SettingsForm action={saveProfileAction}>
@@ -167,9 +167,9 @@ export default async function ReceptionistPage() {
         <div>
           <Card>
             <CardHeader>
-              <CardTitle>Test your receptionist</CardTitle>
+              <CardTitle>Try it out</CardTitle>
               <CardDescription>
-                This is exactly what visitors see. Save your settings first to test changes.
+                Exactly what buyers see. Save your settings first to test changes.
               </CardDescription>
             </CardHeader>
             <CardContent>

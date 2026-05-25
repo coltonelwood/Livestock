@@ -28,9 +28,9 @@ export function ListingForm({
           {state.error}
         </p>
       )}
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row">
         {/* The clicked button's name/value is submitted, choosing the status. */}
-        <Button type="submit" name="publish" value="true" disabled={pending}>
+        <Button type="submit" name="publish" value="true" size="lg" disabled={pending} className="w-full sm:w-auto">
           {pending ? "Saving…" : "Publish"}
         </Button>
         <Button
@@ -38,7 +38,9 @@ export function ListingForm({
           name="publish"
           value="false"
           variant="outline"
+          size="lg"
           disabled={pending}
+          className="w-full sm:w-auto"
         >
           Save draft
         </Button>

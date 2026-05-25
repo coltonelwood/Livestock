@@ -35,7 +35,7 @@ export function ActionForm<S extends BaseState>({
         </p>
       )}
       {state.saved && <p className="text-sm text-emerald-600">Saved.</p>}
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" size="lg" disabled={pending} className="w-full sm:w-auto">
         {pending ? pendingLabel : submitLabel}
       </Button>
     </form>

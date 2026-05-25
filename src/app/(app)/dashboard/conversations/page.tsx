@@ -9,7 +9,7 @@ import { EmptyState } from "@/modules/dashboard/components/empty-state";
 import { createClient } from "@/lib/supabase/server";
 import { requireOrg } from "@/modules/organizations/context";
 
-export const metadata: Metadata = { title: "Conversations" };
+export const metadata: Metadata = { title: "Inquiries" };
 
 export default async function ConversationsPage() {
   const { organization } = await requireOrg();
@@ -24,17 +24,17 @@ export default async function ConversationsPage() {
   return (
     <>
       <PageHeader
-        title="Conversations"
-        description="Chats handled by your AI receptionist."
+        title="Inquiries"
+        description="Buyer chats your assistant handled."
       />
 
       {!conversations || conversations.length === 0 ? (
         <EmptyState
-          title="No conversations yet"
-          description="When visitors chat with your AI receptionist on your storefront or listings, those conversations show up here. Set up your receptionist to start capturing them."
+          title="No inquiries yet"
+          description="When a buyer chats on your storefront or a listing, it shows up here. Set up the Lead Assistant to start catching them."
           action={
             <Button asChild>
-              <Link href="/dashboard/receptionist">Set up receptionist</Link>
+              <Link href="/dashboard/receptionist">Set up Lead Assistant</Link>
             </Button>
           }
         />

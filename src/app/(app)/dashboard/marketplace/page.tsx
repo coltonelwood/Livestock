@@ -8,7 +8,7 @@ import { PageHeader } from "@/modules/dashboard/components/page-header";
 import { createClient } from "@/lib/supabase/server";
 import { requireOrg } from "@/modules/organizations/context";
 
-export const metadata: Metadata = { title: "Marketplace preview" };
+export const metadata: Metadata = { title: "Storefront" };
 
 export default async function MarketplacePreviewPage() {
   const { organization } = await requireOrg();
@@ -22,8 +22,8 @@ export default async function MarketplacePreviewPage() {
   return (
     <>
       <PageHeader
-        title="Marketplace preview"
-        description="See how your business appears to buyers."
+        title="Storefront"
+        description="How buyers see your ranch."
       />
       <div className="grid gap-4 sm:grid-cols-2">
         <Card>

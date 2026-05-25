@@ -27,7 +27,7 @@ export function CrmForm({
           {state.error}
         </p>
       )}
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" size="lg" disabled={pending} className="w-full sm:w-auto">
         {pending ? "Saving…" : submitLabel}
       </Button>
     </form>
