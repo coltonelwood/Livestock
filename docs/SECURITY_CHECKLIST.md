@@ -104,4 +104,10 @@ A living checklist. ✅ = implemented in Phase 1. ☐ = required before/at launc
 - ☐ Configure Storage bucket policies before enabling document uploads.
 - ☐ Enable Postgres point-in-time recovery / backups.
 - ☐ Set security headers (CSP, HSTS) and review CORS for the API route.
-- ☐ Run `npm audit` and patch advisories before launch.
+- ✅ Next.js pinned to a patched 15.x (15.5.18) — clears CVE-2025-29927, the
+  middleware auth-bypass advisory (we rely on middleware to gate `/dashboard`
+  and `/admin`). Keep it patched.
+- ☐ Run `npm audit` and patch advisories before launch. (Known: a moderate
+  postcss advisory remains inside Next's bundled toolchain — build-time only,
+  with author-controlled CSS; npm's auto-fix would wrongly downgrade Next, so
+  don't force it. Resolves when Next bumps its internal postcss.)
