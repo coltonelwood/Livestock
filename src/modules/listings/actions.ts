@@ -67,6 +67,7 @@ export async function createMeatProductAction(
   const publish = formData.get("publish") === "true";
   const { error } = await supabase.from("meat_products").insert({
     organization_id: organization.id,
+    seller_name: organization.name,
     status: publish ? "active" : "draft",
     ...parsed.data,
   });

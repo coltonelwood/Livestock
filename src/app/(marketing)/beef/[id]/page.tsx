@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InquiryForm } from "@/modules/listings/components/inquiry-form";
+import { ChatWidget } from "@/modules/receptionist/components/chat-widget";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -62,6 +63,11 @@ export default async function BeefDetailPage({
               ? "Contact for price"
               : `$${product.price_usd.toLocaleString()} / ${product.unit}`}
           </p>
+          {product.seller_name && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Sold by {product.seller_name}
+            </p>
+          )}
           {product.description && (
             <p className="mt-6 whitespace-pre-wrap text-sm leading-relaxed">
               {product.description}
@@ -69,14 +75,20 @@ export default async function BeefDetailPage({
           )}
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Order / ask a question</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <InquiryForm listingType="meat" listingId={product.id} />
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Order / ask a question</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <InquiryForm listingType="meat" listingId={product.id} />
+            </CardContent>
+          </Card>
+          <ChatWidget
+            organizationId={product.organization_id}
+            businessName={product.seller_name ?? "this ranch"}
+          />
+        </div>
       </div>
     </div>
   );

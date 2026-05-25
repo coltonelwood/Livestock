@@ -40,6 +40,19 @@ export type ReminderStatus = "pending" | "done" | "cancelled";
 
 type Timestamps = { created_at: string; updated_at: string };
 
+export type AiInteraction = {
+  id: string;
+  organization_id: string;
+  agent_id: string | null;
+  conversation_id: string | null;
+  model: string | null;
+  prompt_tokens: number | null;
+  completion_tokens: number | null;
+  latency_ms: number | null;
+  cost_usd: number | null;
+  created_at: string;
+};
+
 export type Profile = {
   id: string;
   full_name: string | null;
@@ -167,6 +180,7 @@ export type MeatProduct = Timestamps & {
   inventory: number | null;
   photos: string[];
   status: ListingStatus;
+  seller_name: string | null;
   created_by: string | null;
 }
 
@@ -262,6 +276,7 @@ export type Database = {
         ConversationMessage,
         "conversation_id" | "organization_id" | "role" | "content"
       >;
+      ai_interactions: Def<AiInteraction, "organization_id">;
     };
     Views: { [_ in never]: never };
     Functions: {
