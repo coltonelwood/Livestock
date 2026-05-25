@@ -1,0 +1,122 @@
+# OpenRange
+
+**The operating system for modern ranching and livestock commerce.**
+
+OpenRange is a multi-tenant SaaS platform for ranches, breeders, sale barns,
+haulers, processors, and rural vets/feed stores. Phase 1 ships the platform
+shell plus the first revenue wedge: an **AI receptionist**, a **ranch CRM**, and
+a **livestock + direct-to-consumer beef marketplace**.
+
+## Stack
+
+- **Next.js 15** (App Router) · **TypeScript** · **Tailwind CSS** · shadcn-style UI
+- **Supabase** — Postgres, Auth, Storage, Realtime (Row Level Security throughout)
+- **Anthropic Claude** — AI receptionist
+- Stripe · Twilio/Telnyx · PostHog — scaffolded for later phases
+
+## What's real vs. placeholder (Phase 1)
+
+| Real & working | Placeholder (schema + UI, not wired) |
+| --- | --- |
+| Email/password auth, org onboarding, multi-tenant RLS | Stripe billing / payments |
+| CRM: customers, leads, notes, livestock, reminders | Live & timed auctions + bids |
+| Listings: livestock + D2C beef, public pages, inquiry → lead | Transport load board |
+| AI receptionist web chat (real Claude calls) + lead capture | SMS / voice receptionist |
+| Admin dashboard + moderation | Orders / checkout |
+
+See [`docs/PRD.md`](docs/PRD.md), [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md),
+and [`docs/SCHEMA.md`](docs/SCHEMA.md) for the full plan.
+
+## Prerequisites
+
+- Node.js 20+ and npm
+- A Supabase project (free tier is fine)
+- An Anthropic API key (for the receptionist)
+
+## Setup
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Configure environment
+cp .env.example .env.local
+#   Fill in NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
+#   SUPABASE_SERVICE_ROLE_KEY, and ANTHROPIC_API_KEY.
+
+# 3. Apply the database migrations to your Supabase project
+#    Option A — Supabase CLI (recommended):
+#       supabase link --project-ref <your-ref>
+#       supabase db push
+#    Option B — paste each file in supabase/migrations/*.sql (in order)
+#    into the Supabase SQL editor and run them.
+
+# 4. Regenerate typed DB definitions (optional but recommended)
+#    npx supabase gen types typescript --project-id <id> > src/lib/db/types.gen.ts
+#    then point the Database import at it.
+
+# 5. Run the app
+npm run dev      # http://localhost:3000
+```
+
+### Supabase Auth note
+
+For the smoothest local flow, disable "Confirm email" in your Supabase project
+(Authentication → Providers → Email) so signup logs you straight into
+onboarding. With confirmation on, users get a magic link that routes through
+`/auth/callback`.
+
+### Granting yourself platform admin
+
+The admin dashboard (`/admin`) requires `platform_role = 'platform_admin'`.
+Set it once via the Supabase SQL editor (this column is protected from
+self-promotion in the app):
+
+```sql
+update public.profiles set platform_role = 'platform_admin'
+where email = 'you@example.com';
+```
+
+## Scripts
+
+```bash
+npm run dev         # start dev server
+npm run build       # production build
+npm run start       # run the production build
+npm run lint        # eslint
+npm run typecheck   # tsc --noEmit
+npm test            # vitest unit tests
+```
+
+## Testing
+
+- **Unit tests** (`npm test`) cover pure logic: class merging, org validation,
+  the receptionist prompt builder, and contact extraction.
+- **Database / RLS tests**: `supabase/tests/run-local.sh` spins up a throwaway
+  Postgres, applies every migration, and runs a cross-tenant isolation suite
+  proving the RLS policies hold. Requires a local Postgres install but **no
+  Supabase project**. See [`supabase/tests/README.md`](supabase/tests/README.md).
+
+## Project structure
+
+```
+src/
+  app/            route groups: (marketing) (auth) (app) admin, api/
+  modules/        feature modules: marketing, auth, organizations, crm,
+                  listings, receptionist, admin
+  lib/            supabase clients, auth/session, env, ai (Claude), db types
+  components/ui/  design-system primitives
+supabase/
+  migrations/     ordered SQL migrations (schema + RLS)
+  tests/          RLS isolation harness
+docs/             PRD, architecture, schema, checklists
+```
+
+Modules talk to each other only through `lib/` and exported server actions —
+never by reaching into another module's internals.
+
+## Deployment
+
+Deploy on Vercel + Supabase. Walk the
+[deployment checklist](docs/DEPLOYMENT_CHECKLIST.md) and the
+[security checklist](docs/SECURITY_CHECKLIST.md) before going live.
