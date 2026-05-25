@@ -25,11 +25,8 @@ export default async function OnboardingPage() {
       </Link>
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">Set up your business</CardTitle>
-          <CardDescription>
-            Create your organization. You can invite your team and add details
-            later.
-          </CardDescription>
+          <CardTitle className="text-2xl">Set up your ranch</CardTitle>
+          <CardDescription>Add details and your team later.</CardDescription>
         </CardHeader>
         <CardContent>
           <CreateOrgForm />

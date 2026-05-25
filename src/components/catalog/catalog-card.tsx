@@ -19,7 +19,7 @@ export function CatalogCard({
   href: string;
   photos?: string[] | null;
   title: string;
-  price: string;
+  price?: string;
   subtitle?: string;
   meta?: string;
   tag?: string;
@@ -44,8 +44,14 @@ export function CatalogCard({
         )}
       </div>
       <div className="p-3">
-        <p className="text-lg font-bold leading-none text-foreground">{price}</p>
-        <p className="mt-1.5 line-clamp-2 text-sm font-medium leading-snug">{title}</p>
+        {price ? (
+          <>
+            <p className="text-lg font-bold leading-none text-foreground">{price}</p>
+            <p className="mt-1.5 line-clamp-2 text-sm font-medium leading-snug">{title}</p>
+          </>
+        ) : (
+          <p className="line-clamp-2 text-base font-semibold leading-snug">{title}</p>
+        )}
         {subtitle && (
           <p className={cn("mt-1 truncate text-sm text-muted-foreground")}>{subtitle}</p>
         )}

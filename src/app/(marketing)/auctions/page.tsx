@@ -1,10 +1,7 @@
 import Link from "next/link";
-import { Gavel, MapPin } from "lucide-react";
 import type { Metadata } from "next";
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Section } from "@/modules/marketing/components/section";
@@ -12,6 +9,7 @@ import { FeatureHero } from "@/modules/marketing/components/feature-hero";
 import { AuctionLotCard } from "@/modules/marketing/components/preview-cards";
 import { MarketingCTA } from "@/modules/marketing/components/cta";
 import { demoAuctionLots } from "@/modules/marketing/demo-data";
+import { CatalogCard, CatalogGrid } from "@/components/catalog/catalog-card";
 import { FilterShell, FilterField } from "@/modules/search/components/filter-shell";
 import { Pagination } from "@/modules/search/components/pagination";
 import { parseAuctionFilters, rangeFor, AUCTION_STATUSES } from "@/modules/search/query";
@@ -86,11 +84,18 @@ export default async function AuctionsPage({
           {auctions.length > 0 ? (
             <>
               <p className="mb-4 text-sm text-muted-foreground">{count} sale{count === 1 ? "" : "s"}</p>
-              <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              <CatalogGrid>
                 {auctions.map((a) => (
-                  <PublicAuctionCard key={a.id} auction={a} />
+                  <CatalogCard
+                    key={a.id}
+                    href={`/auctions/${a.id}`}
+                    title={a.title}
+                    subtitle={a.location ?? undefined}
+                    meta={a.starts_at ? new Date(a.starts_at).toLocaleString() : "Time TBA"}
+                    tag={a.status === "live" ? "Live" : a.status === "ended" ? "Ended" : "Upcoming"}
+                  />
                 ))}
-              </div>
+              </CatalogGrid>
               <Pagination basePath="/auctions" page={f.page} count={count} baseParams={baseParams} />
             </>
           ) : hasFilters ? (
@@ -118,33 +123,5 @@ export default async function AuctionsPage({
 
       <MarketingCTA title="Take your sale online" subtitle="Catalog lots, open bidding, settle against reserve." />
     </>
-  );
-}
-
-function PublicAuctionCard({ auction }: { auction: Auction }) {
-  const live = auction.status === "live";
-  return (
-    <Link href={`/auctions/${auction.id}`}>
-      <Card className="h-full transition-colors hover:border-primary/40">
-        <CardContent className="space-y-3 pt-6">
-          <div className="flex items-start justify-between gap-2">
-            <Gavel className="size-5 text-accent" />
-            <Badge variant={live ? "success" : auction.status === "ended" ? "outline" : "secondary"}>
-              {live ? "Live" : auction.status === "ended" ? "Ended" : "Upcoming"}
-            </Badge>
-          </div>
-          <h3 className="font-display text-lg font-semibold leading-snug">{auction.title}</h3>
-          {auction.location && (
-            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <MapPin className="size-3.5" /> {auction.location}
-            </p>
-          )}
-          <p className="border-t border-border pt-3 text-sm text-muted-foreground">
-            {auction.starts_at ? new Date(auction.starts_at).toLocaleString() : "Time TBA"}
-          </p>
-          <Button variant="outline" size="sm" className="w-full">View catalog</Button>
-        </CardContent>
-      </Card>
-    </Link>
   );
 }

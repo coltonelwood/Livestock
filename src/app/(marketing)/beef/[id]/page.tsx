@@ -9,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InquiryForm } from "@/modules/listings/components/inquiry-form";
-import { ChatWidget } from "@/modules/receptionist/components/chat-widget";
 import { addToCartAction } from "@/modules/commerce/actions";
 import { MediaImage } from "@/modules/media/components/media-image";
 import { createClient } from "@/lib/supabase/server";
@@ -132,10 +131,6 @@ export default async function BeefDetailPage({
               <InquiryForm listingType="meat" listingId={product.id} />
             </CardContent>
           </Card>
-          <ChatWidget
-            organizationId={product.organization_id}
-            businessName={product.seller_name ?? "this ranch"}
-          />
         </div>
       </div>
     </div>

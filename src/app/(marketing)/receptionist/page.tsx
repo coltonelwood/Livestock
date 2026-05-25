@@ -25,7 +25,7 @@ export default function ReceptionistPage() {
       <FeatureHero
         eyebrow="AI Ranch Receptionist"
         title="The hand that always answers the phone"
-        subtitle="You can't stop working to answer every message. Put a receptionist on your site that handles buyer questions, qualifies them, and never lets a lead slip through the gate."
+        subtitle="Answers buyer questions on your site, qualifies them, and saves every lead — day and night."
         primaryCta={{ label: "Set up your receptionist", href: "/signup" }}
         secondaryCta={{ label: "See pricing", href: "/pricing" }}
       />

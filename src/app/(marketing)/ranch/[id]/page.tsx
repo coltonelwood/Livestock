@@ -1,10 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MapPin, Globe, Phone, Mail } from "lucide-react";
 import type { Metadata } from "next";
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { CatalogCard } from "@/components/catalog/catalog-card";
 import { ChatWidget } from "@/modules/receptionist/components/chat-widget";
 import { createClient } from "@/lib/supabase/server";
@@ -85,21 +82,13 @@ export default async function RanchStorefrontPage({
         {auctions.length > 0 && (
           <StoreSection title="Auctions">
             {auctions.map((a) => (
-              <Link key={a.id} href={`/auctions/${a.id}`}>
-                <Card className="h-full transition-colors hover:border-primary/40">
-                  <CardContent className="space-y-2 pt-6">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-display font-semibold">{a.title}</h3>
-                      <Badge variant={a.status === "live" ? "success" : "secondary"}>
-                        {a.status === "live" ? "Live" : "Upcoming"}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {a.starts_at ? new Date(a.starts_at).toLocaleString() : ""}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
+              <CatalogCard
+                key={a.id}
+                href={`/auctions/${a.id}`}
+                title={a.title}
+                meta={a.starts_at ? new Date(a.starts_at).toLocaleString() : undefined}
+                tag={a.status === "live" ? "Live" : "Upcoming"}
+              />
             ))}
           </StoreSection>
         )}

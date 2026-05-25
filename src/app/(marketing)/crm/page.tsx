@@ -35,7 +35,7 @@ export default function CrmPage() {
       <FeatureHero
         eyebrow="Ranch CRM"
         title="Run your operation, not your notebook"
-        subtitle="Customers, leads, livestock, and follow-ups in one place — so you can stop digging through text messages to remember who wanted what."
+        subtitle="Customers, leads, livestock, and follow-ups — all in one place."
         primaryCta={{ label: "Start free", href: "/signup" }}
         secondaryCta={{ label: "See pricing", href: "/pricing" }}
       />

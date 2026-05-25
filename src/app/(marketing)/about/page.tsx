@@ -22,7 +22,7 @@ export default function AboutPage() {
       <FeatureHero
         eyebrow="About"
         title="The business of ranching deserves better tools"
-        subtitle="OpenRange is one platform for the commerce side of livestock — selling stock, selling beef, and keeping track of the people you do business with."
+        subtitle="One platform to sell stock and beef — and keep track of your buyers."
         primaryCta={{ label: "Get started", href: "/signup" }}
         secondaryCta={{ label: "Request a demo", href: "/contact" }}
       />

@@ -6,7 +6,6 @@ import type { Metadata } from "next";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InquiryForm } from "@/modules/listings/components/inquiry-form";
-import { ChatWidget } from "@/modules/receptionist/components/chat-widget";
 import { MediaImage } from "@/modules/media/components/media-image";
 import { createClient } from "@/lib/supabase/server";
 
@@ -98,7 +97,7 @@ export default async function ListingDetailPage({
           )}
         </div>
 
-        <div className="space-y-6">
+        <div>
           <Card>
             <CardHeader>
               <CardTitle>Contact the seller</CardTitle>
@@ -107,10 +106,6 @@ export default async function ListingDetailPage({
               <InquiryForm listingType="livestock" listingId={listing.id} />
             </CardContent>
           </Card>
-          <ChatWidget
-            organizationId={listing.organization_id}
-            businessName={listing.seller_name ?? "this ranch"}
-          />
         </div>
       </div>
     </div>
