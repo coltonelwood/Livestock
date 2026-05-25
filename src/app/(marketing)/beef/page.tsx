@@ -4,111 +4,162 @@ import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/server";
 import { demoBeefBoxes, formatUsd } from "@/modules/marketing/demo-data";
 import { BeefBoxCard } from "@/modules/marketing/components/preview-cards";
+import { FilterShell, FilterField } from "@/modules/search/components/filter-shell";
+import { Pagination } from "@/modules/search/components/pagination";
+import { parseProductFilters, rangeFor, PRODUCT_TYPES } from "@/modules/search/query";
 import type { MeatProduct } from "@/lib/db/types";
 
 export const metadata: Metadata = {
   title: "Beef Direct",
-  description:
-    "Buy quarters, halves, and retail cuts of beef direct from ranches.",
+  description: "Search quarters, halves, and retail cuts of beef direct from ranches.",
 };
 
 export const dynamic = "force-dynamic";
 
-async function loadActiveProducts(): Promise<MeatProduct[]> {
+export default async function BeefPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await searchParams;
+  const f = parseProductFilters(sp);
+  const { from, to } = rangeFor(f.page);
+
+  let products: MeatProduct[] = [];
+  let count = 0;
   try {
     const supabase = await createClient();
-    const { data } = await supabase
-      .from("meat_products")
-      .select("*")
-      .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .limit(60);
-    return data ?? [];
+    let q = supabase.from("meat_products").select("*", { count: "exact" }).eq("status", "active");
+    if (f.q) q = q.ilike("name", `%${f.q}%`);
+    if (f.productType) q = q.eq("product_type", f.productType);
+    if (f.minPrice != null) q = q.gte("price_usd", f.minPrice);
+    if (f.maxPrice != null) q = q.lte("price_usd", f.maxPrice);
+    if (f.inStock) q = q.or("inventory.is.null,inventory.gt.0");
+    if (f.sort === "price_asc") q = q.order("price_usd", { ascending: true, nullsFirst: false });
+    else if (f.sort === "price_desc") q = q.order("price_usd", { ascending: false, nullsFirst: false });
+    else q = q.order("created_at", { ascending: false });
+    const res = await q.range(from, to);
+    products = res.data ?? [];
+    count = res.count ?? 0;
   } catch {
-    return [];
+    products = [];
+    count = 0;
   }
-}
 
-export default async function BeefPage() {
-  const products = await loadActiveProducts();
+  const hasFilters = !!(f.q || f.productType || f.minPrice != null || f.maxPrice != null || f.inStock);
+  const baseParams = {
+    q: f.q, type: f.productType, min: f.minPrice, max: f.maxPrice,
+    stock: f.inStock ? "1" : undefined, sort: f.sort === "newest" ? undefined : f.sort,
+  };
 
   return (
     <>
       <section className="border-b border-border bg-ink text-ink-foreground">
-        <div className="container py-14">
+        <div className="container py-12">
           <p className="eyebrow">Beef Direct</p>
           <h1 className="mt-3 font-display text-4xl font-bold tracking-tight md:text-5xl">
             Beef straight from the ranch
           </h1>
-          <p className="mt-4 max-w-2xl text-lg text-ink-foreground/70">
-            Quarters, halves, wholes, and retail cuts sold direct by the people
-            who raised the animal. Browse freely — no account needed.
+          <p className="mt-3 max-w-2xl text-ink-foreground/70">
+            Search quarters, halves, wholes, and retail cuts sold direct.
           </p>
-          <Button asChild className="mt-6">
-            <Link href="/signup">Sell your beef here</Link>
-          </Button>
         </div>
       </section>
 
-      <div className="container py-12">
-        {products.length > 0 ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {products.map((p) => (
-              <Link key={p.id} href={`/beef/${p.id}`}>
-                <Card className="h-full transition-colors hover:border-primary/40">
-                  <CardContent className="space-y-3 pt-6">
-                    <div className="flex items-start justify-between gap-2">
-                      <h2 className="font-display text-lg font-semibold">
-                        {p.name}
-                      </h2>
-                      {p.inventory != null && p.inventory <= 0 ? (
-                        <Badge variant="outline" className="border-destructive/40 text-destructive">
-                          Sold out
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline">
-                          {p.product_type.replace("_", " ")}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="border-t border-border pt-3">
-                      <p className="text-lg font-bold text-primary">
-                        {formatUsd(p.price_usd)}
-                        <span className="text-sm font-normal text-muted-foreground">
-                          {" "}
-                          / {p.unit}
-                        </span>
-                      </p>
-                      {p.seller_name && (
-                        <p className="text-xs text-muted-foreground">
-                          {p.seller_name}
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <>
-            <div className="mb-8 rounded-lg border border-dashed border-accent/40 bg-accent/5 p-5 text-sm">
-              <span className="font-semibold">No beef listed yet.</span> Here are
-              example products so you can see how the storefront works.{" "}
-              <Link href="/signup" className="font-medium text-primary underline">
-                List yours.
-              </Link>
-            </div>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {demoBeefBoxes.map((b) => (
-                <BeefBoxCard key={b.id} box={b} />
+      <div className="container py-10">
+        <FilterShell basePath="/beef">
+          <FilterField label="Search">
+            <Input name="q" defaultValue={f.q ?? ""} placeholder="Ribeye, half beef…" />
+          </FilterField>
+          <FilterField label="Type">
+            <Select name="type" defaultValue={f.productType ?? ""}>
+              <option value="">Any</option>
+              {PRODUCT_TYPES.map((t) => (
+                <option key={t} value={t}>{t.replace("_", " ")}</option>
               ))}
+            </Select>
+          </FilterField>
+          <FilterField label="Sort">
+            <Select name="sort" defaultValue={f.sort}>
+              <option value="newest">Newest</option>
+              <option value="price_asc">Price: low to high</option>
+              <option value="price_desc">Price: high to low</option>
+            </Select>
+          </FilterField>
+          <FilterField label="Min price">
+            <Input name="min" type="number" min="0" defaultValue={f.minPrice ?? ""} />
+          </FilterField>
+          <FilterField label="Max price">
+            <Input name="max" type="number" min="0" defaultValue={f.maxPrice ?? ""} />
+          </FilterField>
+          <FilterField label="Availability">
+            <label className="flex h-10 items-center gap-2 text-sm">
+              <input type="checkbox" name="stock" value="1" defaultChecked={f.inStock} className="size-4" />
+              In stock only
+            </label>
+          </FilterField>
+        </FilterShell>
+
+        <div className="mt-8">
+          {products.length > 0 ? (
+            <>
+              <p className="mb-4 text-sm text-muted-foreground">{count} product{count === 1 ? "" : "s"}</p>
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {products.map((p) => {
+                  const soldOut = p.inventory != null && p.inventory <= 0;
+                  return (
+                    <Link key={p.id} href={`/beef/${p.id}`}>
+                      <Card className="h-full transition-colors hover:border-primary/40">
+                        <CardContent className="space-y-3 pt-6">
+                          <div className="flex items-start justify-between gap-2">
+                            <h2 className="font-display text-lg font-semibold">{p.name}</h2>
+                            {soldOut ? (
+                              <Badge variant="outline" className="border-destructive/40 text-destructive">Sold out</Badge>
+                            ) : (
+                              <Badge variant="outline">{p.product_type.replace("_", " ")}</Badge>
+                            )}
+                          </div>
+                          <div className="border-t border-border pt-3">
+                            <p className="text-lg font-bold text-primary">
+                              {formatUsd(p.price_usd)}
+                              <span className="text-sm font-normal text-muted-foreground"> / {p.unit}</span>
+                            </p>
+                            {p.seller_name && <p className="text-xs text-muted-foreground">{p.seller_name}</p>}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  );
+                })}
+              </div>
+              <Pagination basePath="/beef" page={f.page} count={count} baseParams={baseParams} />
+            </>
+          ) : hasFilters ? (
+            <div className="rounded-lg border border-dashed p-10 text-center">
+              <p className="font-semibold">No products match your filters</p>
+              <Button asChild variant="outline" className="mt-4">
+                <Link href="/beef">Clear filters</Link>
+              </Button>
             </div>
-          </>
-        )}
+          ) : (
+            <>
+              <div className="mb-8 rounded-lg border border-dashed border-accent/40 bg-accent/5 p-5 text-sm">
+                <span className="font-semibold">No beef listed yet.</span> Example products shown below.{" "}
+                <Link href="/signup" className="font-medium text-primary underline">List yours.</Link>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {demoBeefBoxes.map((b) => (
+                  <BeefBoxCard key={b.id} box={b} />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </>
   );
