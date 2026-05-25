@@ -363,6 +363,8 @@ export type PlaceBidResult = {
   current_bid: number;
   bid_count: number;
   min_next_bid: number;
+  previous_bidder: string | null;
+  lot_title: string;
 };
 
 export type Notification = {

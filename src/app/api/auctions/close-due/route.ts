@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAuctionDue } from "@/modules/auctions/schema";
+import { notifyAuctionResults } from "@/modules/auctions/notify";
 
 export const runtime = "nodejs";
 
@@ -33,7 +34,10 @@ export async function GET(request: NextRequest) {
   let closed = 0;
   for (const a of due) {
     const { error } = await admin.rpc("close_auction", { p_auction: a.id });
-    if (!error) closed += 1;
+    if (!error) {
+      closed += 1;
+      await notifyAuctionResults(admin, a.id);
+    }
   }
 
   return NextResponse.json({ checked: live?.length ?? 0, closed });

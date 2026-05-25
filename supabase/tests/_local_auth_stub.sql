@@ -15,3 +15,21 @@ language sql stable as $$
 $$;
 
 create extension if not exists pgcrypto;
+
+-- Minimal stub of the Supabase Storage schema so the media-bucket migration
+-- applies locally. Real Supabase provides these.
+create schema if not exists storage;
+create table if not exists storage.buckets (
+  id text primary key,
+  name text,
+  public boolean default false,
+  created_at timestamptz default now()
+);
+create table if not exists storage.objects (
+  id uuid primary key default gen_random_uuid(),
+  bucket_id text,
+  name text,
+  owner uuid,
+  created_at timestamptz default now()
+);
+

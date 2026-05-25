@@ -4,10 +4,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireUser } from "@/lib/auth/session";
 import { requireOrg, isOrgAdmin } from "@/modules/organizations/context";
 import { canAccessAuctionTools } from "@/modules/billing/entitlements";
 import { enforce } from "@/lib/ratelimit";
+import { enqueueNotification } from "@/lib/notifications/enqueue";
+import { notifyAuctionResults } from "@/modules/auctions/notify";
 import {
   createAuctionSchema,
   createLotSchema,
@@ -142,6 +145,7 @@ export async function endAuctionAction(formData: FormData) {
   if (!id) return;
   const supabase = await createClient();
   await supabase.rpc("end_auction", { p_auction: id });
+  await notifyAuctionResults(createAdminClient(), id);
   revalidatePath(`/dashboard/auctions/${id}`);
   revalidatePath(`/auctions/${id}`);
 }
@@ -194,6 +198,21 @@ export async function placeBidAction(
   });
 
   if (error) return { error: bidErrorMessage(error.message) };
+
+  // Notify the bidder we just outbid (best-effort; needs their email + provider).
+  if (data?.previous_bidder && data.previous_bidder !== user.id) {
+    const admin = createAdminClient();
+    const { data: prev } = await admin
+      .from("profiles")
+      .select("email")
+      .eq("id", data.previous_bidder)
+      .maybeSingle();
+    await enqueueNotification({
+      type: "outbid",
+      to: prev?.email ?? null,
+      data: { lotTitle: data.lot_title, amount: data.current_bid },
+    });
+  }
 
   revalidatePath(`/auctions`);
   return {

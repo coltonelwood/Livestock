@@ -90,10 +90,13 @@ exception when others then
   if left(sqlerrm, 11) <> 'BID_TOO_LOW' then raise exception 'FAIL t5: wrong error %', sqlerrm; end if;
 end $$;
 
--- TEST 6: a valid raise to the minimum is accepted.
+-- TEST 6: a valid raise is accepted and reports the bidder it outbid (u2).
 do $$ declare r jsonb; begin
   r := public.place_bid('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 1100);
-  if (r->>'current_bid')::numeric <> 1100 then raise exception 'FAIL t6'; end if;
+  if (r->>'current_bid')::numeric <> 1100 then raise exception 'FAIL t6: bid %', r; end if;
+  if (r->>'previous_bidder') <> '22222222-2222-2222-2222-222222222222' then
+    raise exception 'FAIL t6: previous_bidder % (expected u2)', r->>'previous_bidder';
+  end if;
 end $$;
 reset role;
 

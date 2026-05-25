@@ -103,13 +103,14 @@ storefronts, service-role-only money RPCs, and the privilege-escalation guard.
 
 ## Known gaps (honest)
 
-- 🟡 **Media (V3)** — image **validation** (type/size/safe-filename) is built +
-  tested, and detail pages now **render** `photos[]` with a graceful fallback.
-  The **upload UI + Supabase Storage bucket** are the remaining piece (needs
-  live Storage to verify); seeded/real photo URLs already display.
+- 🟡 **Media (V3)** — validation (tested), rendering with fallback, a public
+  Storage-bucket migration, an authorize-then-service-role upload action, and a
+  photo manager on listing/product edit pages are all built. Verifying actual
+  upload needs the live `media` bucket (the migration creates it).
+- 🟡 **Outbid / auction-won emails** — wired end to end: `place_bid` returns the
+  outbid bidder (emailed), and winners are emailed on auction close (manual end
+  + cron). Delivery needs `RESEND_API_KEY`.
 - 🟡 **Email/Stripe/Anthropic/Storage** — wired but require real credentials to
   verify end-to-end; unit/SQL tests cover the surrounding logic.
 - 🟡 **Auction auto-close** — route exists; needs a scheduler (Vercel Cron) +
   `CRON_SECRET`. Bids past `closes_at` are already rejected server-side.
-- 🟡 **Outbid/won emails** — detected + audit-logged; enqueue wiring for these
-  two event types is a follow-up (templates exist).

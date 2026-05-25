@@ -69,15 +69,17 @@ export default async function ListingsPage() {
         ) : (
           <div className="grid gap-3">
             {listings.map((l) => (
-              <Card key={l.id} className="flex items-center justify-between p-4">
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{l.title}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {l.breed ? `${l.breed} · ` : ""}{l.species} · qty {l.quantity} · {price(l.price_usd)}
-                  </p>
-                </div>
-                {statusBadge(l.status)}
-              </Card>
+              <Link key={l.id} href={`/dashboard/listings/${l.id}`}>
+                <Card className="flex items-center justify-between p-4 transition-colors hover:border-primary/40">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{l.title}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {l.breed ? `${l.breed} · ` : ""}{l.species} · qty {l.quantity} · {price(l.price_usd)}
+                    </p>
+                  </div>
+                  {statusBadge(l.status)}
+                </Card>
+              </Link>
             ))}
           </div>
         )}
@@ -92,15 +94,17 @@ export default async function ListingsPage() {
         ) : (
           <div className="grid gap-3">
             {products.map((p) => (
-              <Card key={p.id} className="flex items-center justify-between p-4">
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{p.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {p.product_type.replace("_", " ")} · {price(p.price_usd)} / {p.unit}
-                  </p>
-                </div>
-                {statusBadge(p.status)}
-              </Card>
+              <Link key={p.id} href={`/dashboard/listings/meat/${p.id}`}>
+                <Card className="flex items-center justify-between p-4 transition-colors hover:border-primary/40">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{p.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {p.product_type.replace("_", " ")} · {price(p.price_usd)} / {p.unit}
+                    </p>
+                  </div>
+                  {statusBadge(p.status)}
+                </Card>
+              </Link>
             ))}
           </div>
         )}
