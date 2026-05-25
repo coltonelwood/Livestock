@@ -183,6 +183,65 @@ export async function addNoteAction(
   return {};
 }
 
+export async function convertLeadAction(formData: FormData) {
+  const { organization } = await requireOrg();
+  const leadId = String(formData.get("id") ?? "");
+  if (!leadId) return;
+
+  const supabase = await createClient();
+  const { data: lead } = await supabase
+    .from("leads")
+    .select("*")
+    .eq("organization_id", organization.id)
+    .eq("id", leadId)
+    .maybeSingle();
+  if (!lead || lead.customer_id) {
+    revalidatePath("/dashboard/leads");
+    return;
+  }
+
+  const { data: customer } = await supabase
+    .from("customers")
+    .insert({
+      organization_id: organization.id,
+      name: lead.name || lead.email || lead.phone || "New customer",
+      email: emptyToNull(lead.email),
+      phone: lead.phone,
+      notes: lead.summary,
+    })
+    .select("id")
+    .single();
+
+  if (customer) {
+    await supabase
+      .from("leads")
+      .update({ customer_id: customer.id, status: "won" })
+      .eq("id", leadId);
+  }
+
+  revalidatePath("/dashboard/leads");
+  revalidatePath("/dashboard/customers");
+}
+
+export async function deleteLeadAction(formData: FormData) {
+  await requireOrg();
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  const supabase = await createClient();
+  await supabase.from("leads").delete().eq("id", id);
+  revalidatePath("/dashboard/leads");
+}
+
+export async function deleteCustomerAction(formData: FormData) {
+  await requireOrg();
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  const supabase = await createClient();
+  await supabase.from("customers").delete().eq("id", id);
+  revalidatePath("/dashboard/customers");
+  redirect("/dashboard/customers");
+}
+
 export async function toggleReminderAction(formData: FormData) {
   await requireOrg();
   const id = String(formData.get("id") ?? "");

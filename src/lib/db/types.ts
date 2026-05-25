@@ -17,7 +17,13 @@ export type BusinessType =
 export type OrgRole = "owner" | "admin" | "member";
 export type PlatformRole = "user" | "platform_admin";
 export type LeadStatus = "new" | "contacted" | "qualified" | "won" | "lost";
-export type LeadSource = "web_chat" | "listing_inquiry" | "manual" | "import";
+export type LeadSource =
+  | "web_chat"
+  | "listing_inquiry"
+  | "auction"
+  | "order"
+  | "manual"
+  | "import";
 export type Species =
   | "cattle"
   | "sheep"

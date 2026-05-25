@@ -3,12 +3,13 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/modules/dashboard/components/page-header";
 import { CrmForm } from "@/modules/crm/components/crm-form";
-import { addNoteAction } from "@/modules/crm/actions";
+import { addNoteAction, deleteCustomerAction } from "@/modules/crm/actions";
 import { createClient } from "@/lib/supabase/server";
 import { requireOrg } from "@/modules/organizations/context";
 
@@ -49,7 +50,15 @@ export default async function CustomerDetailPage({
         <ArrowLeft className="size-4" /> Back to customers
       </Link>
 
-      <PageHeader title={customer.name} />
+      <PageHeader
+        title={customer.name}
+        action={
+          <form action={deleteCustomerAction}>
+            <input type="hidden" name="id" value={customer.id} />
+            <Button type="submit" variant="ghost" size="sm">Delete</Button>
+          </form>
+        }
+      />
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>

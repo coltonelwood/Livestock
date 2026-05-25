@@ -10,16 +10,10 @@ import { EmptyState } from "@/modules/dashboard/components/empty-state";
 import { LeadStatusSelect } from "@/modules/crm/components/lead-status-select";
 import { createClient } from "@/lib/supabase/server";
 import { requireOrg } from "@/modules/organizations/context";
-import type { LeadSource } from "@/lib/db/types";
+import { sourceLabel } from "@/modules/crm/util";
+import { convertLeadAction, deleteLeadAction } from "@/modules/crm/actions";
 
 export const metadata: Metadata = { title: "Leads" };
-
-const sourceLabel: Record<LeadSource, string> = {
-  web_chat: "Web chat",
-  listing_inquiry: "Listing",
-  manual: "Manual",
-  import: "Import",
-};
 
 export default async function LeadsPage() {
   const { organization } = await requireOrg();
@@ -63,7 +57,8 @@ export default async function LeadsPage() {
                   <p className="truncate font-medium">
                     {lead.name || lead.email || lead.phone || "Unnamed lead"}
                   </p>
-                  <Badge variant="secondary">{sourceLabel[lead.source]}</Badge>
+                  <Badge variant="secondary">{sourceLabel(lead.source)}</Badge>
+                  {lead.customer_id && <Badge variant="success">Customer</Badge>}
                 </div>
                 {lead.summary && (
                   <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
@@ -74,7 +69,19 @@ export default async function LeadsPage() {
                   {[lead.email, lead.phone].filter(Boolean).join(" · ")}
                 </p>
               </div>
-              <LeadStatusSelect id={lead.id} status={lead.status} />
+              <div className="flex items-center gap-2">
+                <LeadStatusSelect id={lead.id} status={lead.status} />
+                {!lead.customer_id && (
+                  <form action={convertLeadAction}>
+                    <input type="hidden" name="id" value={lead.id} />
+                    <Button type="submit" variant="outline" size="sm">Convert</Button>
+                  </form>
+                )}
+                <form action={deleteLeadAction}>
+                  <input type="hidden" name="id" value={lead.id} />
+                  <Button type="submit" variant="ghost" size="sm">Delete</Button>
+                </form>
+              </div>
             </Card>
           ))}
         </div>
