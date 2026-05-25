@@ -26,6 +26,17 @@ export async function getProfile(): Promise<Profile | null> {
   const { data } = await supabase
     .from("profiles")
     .select("*")
-    .single();
+    .eq("id", (await getUser())?.id ?? "")
+    .maybeSingle();
   return data ?? null;
+}
+
+/** Require a platform admin; non-admins are sent to their dashboard. */
+export async function requirePlatformAdmin(): Promise<Profile> {
+  await requireUser();
+  const profile = await getProfile();
+  if (!profile || profile.platform_role !== "platform_admin") {
+    redirect("/dashboard");
+  }
+  return profile;
 }

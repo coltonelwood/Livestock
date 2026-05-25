@@ -40,6 +40,43 @@ export type ReminderStatus = "pending" | "done" | "cancelled";
 
 type Timestamps = { created_at: string; updated_at: string };
 
+export type ContactRequest = {
+  id: string;
+  name: string;
+  email: string;
+  business: string | null;
+  message: string | null;
+  created_at: string;
+};
+
+export type AuditLog = {
+  id: string;
+  actor_id: string | null;
+  organization_id: string | null;
+  action: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+};
+
+export type SubscriptionStatus =
+  | "trialing"
+  | "active"
+  | "past_due"
+  | "canceled"
+  | "incomplete";
+
+export type Subscription = Timestamps & {
+  id: string;
+  organization_id: string;
+  plan: string;
+  status: SubscriptionStatus;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  current_period_end: string | null;
+};
+
 export type AiInteraction = {
   id: string;
   organization_id: string;
@@ -277,6 +314,9 @@ export type Database = {
         "conversation_id" | "organization_id" | "role" | "content"
       >;
       ai_interactions: Def<AiInteraction, "organization_id">;
+      contact_requests: Def<ContactRequest, "name" | "email">;
+      subscriptions: Def<Subscription, "organization_id">;
+      audit_logs: Def<AuditLog, "action">;
     };
     Views: { [_ in never]: never };
     Functions: {
