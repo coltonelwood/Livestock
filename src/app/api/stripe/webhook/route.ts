@@ -20,27 +20,52 @@ type Admin = ReturnType<typeof createAdminClient>;
 /** Supabase-backed idempotency ledger keyed by Stripe event id. */
 function createEventStore(admin: Admin): WebhookEventStore {
   return {
-    async insertProcessing(id, type) {
-      const { error } = await admin
+    async claimNew(id, type) {
+      // INSERT ... ON CONFLICT DO NOTHING RETURNING: only the first caller for a
+      // given event id inserts a row; concurrent callers get nothing back.
+      const { data, error } = await admin
         .from("stripe_events")
-        .insert({ id, type, status: "processing" });
-      if (!error) return null;
-      if (error.code === "23505") {
-        // Already recorded — return its current status.
-        const { data } = await admin
-          .from("stripe_events")
-          .select("status")
-          .eq("id", id)
-          .maybeSingle();
-        return (data?.status as StripeEventStatus | undefined) ?? "processing";
-      }
-      throw new Error(`stripe_events insert failed: ${error.message}`);
+        .upsert(
+          { id, type, status: "processing" },
+          { onConflict: "id", ignoreDuplicates: true },
+        )
+        .select("id");
+      if (error) throw new Error(`stripe_events claim failed: ${error.message}`);
+      return (data?.length ?? 0) > 0;
     },
-    async markProcessing(id) {
-      await admin
+    async claimRetry(id, staleBefore) {
+      // Conditional UPDATE ... RETURNING. A row is either `failed` or
+      // `processing` (never both), so at most one branch matches. Postgres row
+      // locking guarantees only one concurrent UPDATE flips it.
+      const now = new Date().toISOString();
+      const failed = await admin
         .from("stripe_events")
-        .update({ status: "processing", error: null })
-        .eq("id", id);
+        .update({ status: "processing", error: null, claimed_at: now })
+        .eq("id", id)
+        .eq("status", "failed")
+        .select("id");
+      if (failed.error)
+        throw new Error(`stripe_events retry failed: ${failed.error.message}`);
+      if ((failed.data?.length ?? 0) > 0) return true;
+
+      const stale = await admin
+        .from("stripe_events")
+        .update({ status: "processing", error: null, claimed_at: now })
+        .eq("id", id)
+        .eq("status", "processing")
+        .lt("claimed_at", staleBefore)
+        .select("id");
+      if (stale.error)
+        throw new Error(`stripe_events retry failed: ${stale.error.message}`);
+      return (stale.data?.length ?? 0) > 0;
+    },
+    async getStatus(id) {
+      const { data } = await admin
+        .from("stripe_events")
+        .select("status")
+        .eq("id", id)
+        .maybeSingle();
+      return (data?.status as StripeEventStatus | undefined) ?? null;
     },
     async markProcessed(id, organizationId) {
       await admin
@@ -231,9 +256,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Processing error." }, { status: 500 });
   }
 
-  // Both fresh-processed and duplicate-skipped return 200 so Stripe stops retrying.
+  // Fresh-processed, already-processed, and in-flight all return 200 so Stripe
+  // stops retrying. `duplicate` is true only for an already-processed event.
   return NextResponse.json({
     received: true,
-    duplicate: outcome.status === "skipped",
+    duplicate: outcome.reason === "duplicate",
   });
 }

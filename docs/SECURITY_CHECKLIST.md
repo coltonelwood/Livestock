@@ -69,10 +69,16 @@ A living checklist. ✅ = implemented in Phase 1. ☐ = required before/at launc
 - ✅ Billing events are recorded to `audit_logs`.
 - ✅ Stripe secrets are server-only env vars; only the publishable key is
   `NEXT_PUBLIC_`.
-- ✅ **Webhook idempotency**: every event is tracked in `stripe_events` by its
-  Stripe event id. Already-processed redeliveries return 200 without re-applying
-  changes (no duplicate subscription writes or audit logs); failed events are
-  marked `failed` and reprocessed on the next Stripe retry. Covered by tests.
+- ✅ **Webhook idempotency (atomic)**: every event is tracked in `stripe_events`
+  by its Stripe event id. Claiming uses an atomic `INSERT ... ON CONFLICT DO
+  NOTHING RETURNING`, so two simultaneous deliveries of a brand-new event can
+  never both run the handler — exactly one wins the insert; the other skips.
+  Retries of `failed` (or stale `processing`) rows use a conditional
+  `UPDATE ... RETURNING` that only one concurrent worker can win. Already-
+  processed redeliveries return 200 with nothing re-applied (no duplicate
+  subscription writes or audit logs). A stale `processing` row (crashed handler,
+  older than 5 min) is safely reclaimed. Covered by unit tests including a
+  concurrent-claim race test proving the handler runs exactly once.
 
 ## AI safety
 

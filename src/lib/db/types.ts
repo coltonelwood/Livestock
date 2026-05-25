@@ -87,6 +87,7 @@ export type StripeEvent = {
   status: StripeEventStatus;
   error: string | null;
   processed_at: string | null;
+  claimed_at: string;
   created_at: string;
 };
 

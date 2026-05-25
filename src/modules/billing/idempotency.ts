@@ -1,35 +1,45 @@
 import type { StripeEventStatus } from "@/lib/db/types";
 
 /**
- * Webhook idempotency. The Stripe event id is the dedup key. A store records
- * each event's processing status so retries of an already-processed event are
- * skipped (and side effects like audit logs are not duplicated), while
- * previously-failed events are allowed to reprocess on the next Stripe retry.
+ * Webhook idempotency. The Stripe event id is the dedup key. Claiming is atomic
+ * at the database level so two simultaneous deliveries of the same event can
+ * never both run the handler:
+ *
+ *  - `claimNew` is an INSERT ... ON CONFLICT DO NOTHING RETURNING. Exactly one
+ *    caller inserts the row (owns the event); a concurrent caller gets nothing.
+ *  - `claimRetry` is a conditional UPDATE ... RETURNING that flips a `failed`
+ *    (or stale `processing`) row back to `processing`. Postgres row locking
+ *    means only one concurrent UPDATE can match-and-flip.
+ *
+ * If neither claim succeeds the event is already done or actively in flight, so
+ * we skip safely (and never duplicate side effects like audit logs).
  */
 export interface WebhookEventStore {
+  /** INSERT ... ON CONFLICT DO NOTHING RETURNING → true iff this call inserted. */
+  claimNew(id: string, type: string): Promise<boolean>;
   /**
-   * Atomically claim an event for processing. Returns the EXISTING status if
-   * the event was already recorded, or `null` if this call freshly inserted a
-   * `processing` row (i.e. it's the first time we've seen this event).
+   * Conditionally claim an existing event for retry: a `failed` row, or a
+   * `processing` row whose claim is older than `staleBefore`. Returns true iff
+   * THIS call won the claim.
    */
-  insertProcessing(id: string, type: string): Promise<StripeEventStatus | null>;
-  markProcessing(id: string): Promise<void>;
+  claimRetry(id: string, staleBefore: string): Promise<boolean>;
+  getStatus(id: string): Promise<StripeEventStatus | null>;
   markProcessed(id: string, organizationId: string | null): Promise<void>;
   markFailed(id: string, organizationId: string | null, error: string): Promise<void>;
 }
 
-/** A previously-seen event should be reprocessed unless it already succeeded. */
-export function shouldReprocess(existing: StripeEventStatus): boolean {
-  return existing !== "processed";
-}
+/** A `processing` row older than this is considered stale (handler crashed). */
+export const DEFAULT_STALE_MS = 5 * 60_000;
 
 export type IdempotentOutcome = {
   status: "processed" | "skipped" | "failed";
   organizationId: string | null;
+  /** When skipped: why. `duplicate` = already processed; `in_progress` = another worker holds it. */
+  reason?: "duplicate" | "in_progress";
 };
 
 /**
- * Run `handler` exactly once per event id. The handler returns the discovered
+ * Run `handler` at most once per event id. The handler returns the discovered
  * organization id (or null) and performs the real side effects.
  */
 export async function runIdempotent(
@@ -37,16 +47,27 @@ export async function runIdempotent(
   eventId: string,
   eventType: string,
   handler: () => Promise<string | null>,
+  opts?: { staleMs?: number },
 ): Promise<IdempotentOutcome> {
-  const existing = await store.insertProcessing(eventId, eventType);
+  // 1. Try to own a brand-new event (atomic insert).
+  let owns = await store.claimNew(eventId, eventType);
 
-  if (existing !== null) {
-    if (!shouldReprocess(existing)) {
-      // Already processed — idempotent no-op (no handler, no duplicate audit).
-      return { status: "skipped", organizationId: null };
-    }
-    // Failed or stuck-in-processing → retry.
-    await store.markProcessing(eventId);
+  // 2. Otherwise try to claim it for retry (atomic conditional update).
+  if (!owns) {
+    const staleBefore = new Date(
+      Date.now() - (opts?.staleMs ?? DEFAULT_STALE_MS),
+    ).toISOString();
+    owns = await store.claimRetry(eventId, staleBefore);
+  }
+
+  // 3. Couldn't claim → already processed, or actively in flight elsewhere.
+  if (!owns) {
+    const existing = await store.getStatus(eventId);
+    return {
+      status: "skipped",
+      organizationId: null,
+      reason: existing === "processed" ? "duplicate" : "in_progress",
+    };
   }
 
   try {

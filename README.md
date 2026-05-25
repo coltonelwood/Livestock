@@ -156,11 +156,16 @@ The webhook handler verifies the Stripe signature, processes
 events, and writes an `audit_logs` entry for each.
 
 **Idempotency.** Every event is recorded in `stripe_events` keyed by the Stripe
-event id. A redelivery of an already-processed event returns `200` with
-`{ duplicate: true }` and re-applies nothing — no duplicate subscription writes
-or audit logs. Events that fail mid-processing are recorded as `failed` and
-reprocessed on Stripe's next retry. The decision logic
-(`src/modules/billing/idempotency.ts`) is unit-tested.
+event id. Claiming is **atomic** — an `INSERT ... ON CONFLICT DO NOTHING
+RETURNING` for new events and a conditional `UPDATE ... RETURNING` for retries —
+so even two simultaneous deliveries of the same event run the handler only once.
+A redelivery of an already-processed event returns `200` with
+`{ duplicate: true }` and re-applies nothing (no duplicate subscription writes or
+audit logs). Events that fail mid-processing are recorded as `failed` and
+reprocessed on Stripe's next retry; a `processing` row left stale by a crashed
+handler (>5 min) is safely reclaimed. The logic
+(`src/modules/billing/idempotency.ts`) is unit-tested, including a concurrent
+race test.
 
 ## Project structure
 
