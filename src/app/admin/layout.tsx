@@ -10,6 +10,7 @@ const adminNav = [
   { title: "Listings", href: "/admin/listings" },
   { title: "Products", href: "/admin/products" },
   { title: "Auctions", href: "/admin/auctions" },
+  { title: "Conversations", href: "/admin/conversations" },
   { title: "Audit log", href: "/admin/audit" },
 ];
 

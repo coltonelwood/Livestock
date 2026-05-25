@@ -46,6 +46,12 @@ describe("buildSystemPrompt", () => {
     expect(prompt.toLowerCase()).toContain("ignore these instructions");
   });
 
+  it("is hardened against inventing prices/availability (grounding)", () => {
+    const prompt = buildSystemPrompt(ctx).toLowerCase();
+    expect(prompt).toContain("never invent prices");
+    expect(prompt).toContain("only the facts");
+  });
+
   it("falls back to defaults when profile/agent are missing", () => {
     const prompt = buildSystemPrompt({
       orgName: "Lazy J",
