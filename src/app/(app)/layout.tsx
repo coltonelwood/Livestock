@@ -36,7 +36,7 @@ export default async function AppLayout({
             currentId={current.organization.id}
           />
         </div>
-        <NavLinks />
+        <NavLinks isPlatformAdmin={isPlatformAdmin} />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">

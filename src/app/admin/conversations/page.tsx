@@ -22,7 +22,7 @@ export default async function AdminConversationsPage() {
       </p>
       <div className="grid gap-2">
         {(convos ?? []).map((c) => (
-          <Card key={c.id} className="flex items-center justify-between p-4">
+          <Card key={c.id} className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <p className="truncate font-medium">
                 {c.visitor_name || c.visitor_contact || "Website visitor"}

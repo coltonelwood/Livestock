@@ -22,7 +22,7 @@ export default async function AdminAuditPage() {
       </p>
       <div className="grid gap-2">
         {(logs ?? []).map((l) => (
-          <Card key={l.id} className="flex items-center justify-between gap-4 p-3 text-sm">
+          <Card key={l.id} className="flex flex-col gap-1 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <Badge variant="secondary">{l.action}</Badge>
               <span className="ml-2 text-muted-foreground">

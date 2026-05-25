@@ -2,16 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ShieldCheck } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { dashboardNav } from "@/modules/dashboard/nav";
+import { dashboardNav, type NavItem } from "@/modules/dashboard/nav";
 
-export function NavLinks() {
+export function NavLinks({ isPlatformAdmin = false }: { isPlatformAdmin?: boolean }) {
   const pathname = usePathname();
+  const items: NavItem[] = isPlatformAdmin
+    ? [...dashboardNav, { title: "Admin", href: "/admin", icon: ShieldCheck }]
+    : dashboardNav;
 
   return (
     <nav className="flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
-      {dashboardNav.map((item) => {
+      {items.map((item) => {
         const active =
           item.href === "/dashboard"
             ? pathname === "/dashboard"

@@ -51,16 +51,21 @@ export async function createListingAction(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("livestock_listings").insert({
-    organization_id: organization.id,
-    seller_name: organization.name,
-    status: publish ? "active" : "draft",
-    ...parsed.data,
-  });
-  if (error) return { error: "Could not save listing. Please try again." };
+  const { data, error } = await supabase
+    .from("livestock_listings")
+    .insert({
+      organization_id: organization.id,
+      seller_name: organization.name,
+      status: publish ? "active" : "draft",
+      ...parsed.data,
+    })
+    .select("id")
+    .single();
+  if (error || !data) return { error: "Could not save listing. Please try again." };
 
   revalidatePath("/dashboard/listings");
-  redirect("/dashboard/listings");
+  // Land on the listing's photo manager so adding pictures is the next step.
+  redirect(`/dashboard/listings/${data.id}`);
 }
 
 export async function createMeatProductAction(
@@ -82,16 +87,20 @@ export async function createMeatProductAction(
 
   const supabase = await createClient();
   const publish = formData.get("publish") === "true";
-  const { error } = await supabase.from("meat_products").insert({
-    organization_id: organization.id,
-    seller_name: organization.name,
-    status: publish ? "active" : "draft",
-    ...parsed.data,
-  });
-  if (error) return { error: "Could not save product. Please try again." };
+  const { data, error } = await supabase
+    .from("meat_products")
+    .insert({
+      organization_id: organization.id,
+      seller_name: organization.name,
+      status: publish ? "active" : "draft",
+      ...parsed.data,
+    })
+    .select("id")
+    .single();
+  if (error || !data) return { error: "Could not save product. Please try again." };
 
   revalidatePath("/dashboard/listings");
-  redirect("/dashboard/listings");
+  redirect(`/dashboard/listings/meat/${data.id}`);
 }
 
 /**

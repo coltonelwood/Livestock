@@ -25,7 +25,7 @@ export default async function AdminListingsPage() {
       </p>
       <div className="grid gap-2">
         {(listings ?? []).map((l) => (
-          <Card key={l.id} className="flex items-center justify-between gap-4 p-4">
+          <Card key={l.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <p className="truncate font-medium">{l.title}</p>
               <p className="text-sm text-muted-foreground">

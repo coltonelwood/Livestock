@@ -19,7 +19,7 @@ export default async function AdminOrganizationsPage() {
       <h1 className="mb-6 text-2xl font-bold tracking-tight">Organizations</h1>
       <div className="grid gap-2">
         {(orgs ?? []).map((o) => (
-          <Card key={o.id} className="flex items-center justify-between p-4">
+          <Card key={o.id} className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="font-medium">{o.name}</p>
               <p className="text-sm text-muted-foreground">/{o.slug}</p>

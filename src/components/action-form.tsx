@@ -35,9 +35,11 @@ export function ActionForm<S extends BaseState>({
         </p>
       )}
       {state.saved && <p className="text-sm text-emerald-600">Saved.</p>}
-      <Button type="submit" size="lg" disabled={pending} className="w-full sm:w-auto">
-        {pending ? pendingLabel : submitLabel}
-      </Button>
+      <div className="sticky bottom-20 z-20 -mx-4 border-t border-border bg-background/95 px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+        <Button type="submit" size="lg" disabled={pending} className="w-full sm:w-auto">
+          {pending ? pendingLabel : submitLabel}
+        </Button>
+      </div>
     </form>
   );
 }

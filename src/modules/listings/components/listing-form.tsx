@@ -28,7 +28,7 @@ export function ListingForm({
           {state.error}
         </p>
       )}
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="sticky bottom-20 z-20 -mx-4 flex flex-col gap-2 border-t border-border bg-background/95 px-4 py-3 backdrop-blur sm:flex-row md:static md:mx-0 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
         {/* The clicked button's name/value is submitted, choosing the status. */}
         <Button type="submit" name="publish" value="true" size="lg" disabled={pending} className="w-full sm:w-auto">
           {pending ? "Saving…" : "Publish"}
