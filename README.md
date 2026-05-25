@@ -18,11 +18,12 @@ a **livestock + direct-to-consumer beef marketplace**.
 
 | Real & working | Placeholder (schema + UI, not wired) |
 | --- | --- |
-| Email/password auth, org onboarding, multi-tenant RLS | Stripe billing / payments |
-| CRM: customers, leads, notes, livestock, reminders | Live & timed auctions + bids |
-| Listings: livestock + D2C beef, public pages, inquiry → lead | Transport load board |
-| AI receptionist web chat (real Claude calls) + lead capture | SMS / voice receptionist |
-| Admin dashboard + moderation | Orders / checkout |
+| Email/password auth, org onboarding, multi-tenant RLS | Live & timed auctions + bids |
+| CRM: customers, leads, notes, livestock, reminders | Transport load board |
+| Listings: livestock + D2C beef, public pages, inquiry → lead | SMS / voice receptionist |
+| AI receptionist web chat (real Claude calls) + lead capture | Orders / checkout |
+| Stripe billing + Checkout + Customer Portal + entitlements | |
+| Admin dashboard + moderation | |
 
 See [`docs/PRD.md`](docs/PRD.md), [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md),
 and [`docs/SCHEMA.md`](docs/SCHEMA.md) for the full plan.
@@ -107,6 +108,52 @@ durable, multi-dimensional rate limiting backed by **Upstash Redis**
 **not configured or unreachable**, public AI endpoints **fail closed** (deny),
 while the authenticated dashboard test panel **fails open**. Limits live in
 `LIMITS` and are covered by unit tests.
+
+## Billing (Stripe)
+
+Organizations subscribe to plans (Starter $99 / Pro $299 / Enterprise $999) via
+Stripe Checkout and self-serve through the Stripe Customer Portal. Feature
+access is controlled by **server-side entitlements** — the client is never
+trusted.
+
+| Plan | Active listings | Advanced AI | Storefront | Auctions |
+| --- | --- | --- | --- | --- |
+| Free (default) / Starter | 5 | — | — | — |
+| Pro | Unlimited | ✅ | ✅ | — |
+| Enterprise | Unlimited | ✅ | ✅ | ✅ |
+
+Entitlement helpers live in `src/modules/billing/entitlements.ts`
+(`getOrganizationSubscription`, `requireActiveSubscription`, `canCreateListing`,
+`canAccessAuctionTools`, `canUseAdvancedAI`). A non-active subscription
+(past_due/canceled) is downgraded to free, blocking gated features immediately.
+If Stripe is unconfigured the app runs entirely on the free tier.
+
+### Stripe test-mode setup
+
+1. In the Stripe dashboard (test mode), create three recurring **products /
+   prices**: Starter $99/mo, Pro $299/mo, Enterprise $999/mo. Copy each price ID
+   (`price_...`).
+2. Set the env vars in `.env.local`:
+   ```
+   STRIPE_SECRET_KEY=sk_test_...
+   STRIPE_WEBHOOK_SECRET=whsec_...        # from `stripe listen` (below)
+   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+   STRIPE_STARTER_PRICE_ID=price_...
+   STRIPE_PRO_PRICE_ID=price_...
+   STRIPE_ENTERPRISE_PRICE_ID=price_...
+   ```
+3. Forward webhooks to your local server with the Stripe CLI:
+   ```
+   stripe listen --forward-to localhost:3000/api/stripe/webhook
+   ```
+   Use the printed signing secret as `STRIPE_WEBHOOK_SECRET`.
+4. Go to **Dashboard → Billing**, choose a plan, and pay with Stripe's test card
+   `4242 4242 4242 4242`. The webhook updates the org's subscription and plan.
+5. Use **Manage billing** to open the Customer Portal (upgrade/downgrade/cancel).
+
+The webhook handler verifies the Stripe signature, processes
+`checkout.session.completed`, `customer.subscription.*`, and `invoice.payment_*`
+events, and writes an `audit_logs` entry for each.
 
 ## Project structure
 

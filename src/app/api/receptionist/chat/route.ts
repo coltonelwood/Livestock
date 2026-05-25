@@ -11,6 +11,7 @@ import {
 } from "@/lib/ai/receptionist";
 import { enforce } from "@/lib/ratelimit";
 import { clientIp } from "@/lib/request";
+import { entitlementsForOrg } from "@/modules/billing/entitlements";
 
 export const runtime = "nodejs";
 
@@ -177,10 +178,14 @@ export async function POST(request: NextRequest) {
       content: m.content,
     }));
 
+  // Advanced AI (custom qualification script) is a Pro+ entitlement.
+  const entitlements = await entitlementsForOrg(admin, organizationId);
+
   const system = buildSystemPrompt({
     orgName: org.name,
     profile: profile ?? null,
     agent: agent ?? null,
+    advancedAI: entitlements.advancedAI,
   });
 
   let result;

@@ -74,6 +74,7 @@ export type Subscription = Timestamps & {
   status: SubscriptionStatus;
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
+  price_id: string | null;
   current_period_end: string | null;
 };
 

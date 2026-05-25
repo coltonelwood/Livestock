@@ -8,6 +8,7 @@ import {
   Bell,
   Bot,
   Store,
+  Gavel,
   CreditCard,
   type LucideIcon,
 } from "lucide-react";
@@ -24,5 +25,6 @@ export const dashboardNav: NavItem[] = [
   { title: "Reminders", href: "/dashboard/reminders", icon: Bell },
   { title: "Receptionist", href: "/dashboard/receptionist", icon: Bot },
   { title: "Marketplace", href: "/dashboard/marketplace", icon: Store },
+  { title: "Auctions", href: "/dashboard/auctions", icon: Gavel },
   { title: "Billing", href: "/dashboard/billing", icon: CreditCard },
 ];

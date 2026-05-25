@@ -28,6 +28,17 @@ Required:
 - ☐ `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` (durable rate
   limiting). **Without these, public AI endpoints fail closed (deny).**
 
+Billing (Stripe) — optional; without it orgs stay on the free tier:
+- ☐ `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
+  `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+- ☐ `STRIPE_STARTER_PRICE_ID`, `STRIPE_PRO_PRICE_ID`,
+  `STRIPE_ENTERPRISE_PRICE_ID`
+- ☐ Create the three recurring products/prices in Stripe (live mode for prod).
+- ☐ Register the webhook endpoint `https://<domain>/api/stripe/webhook` for
+  events: `checkout.session.completed`, `customer.subscription.created/updated/
+  deleted`, `invoice.payment_failed`, `invoice.payment_succeeded`. Copy its
+  signing secret into `STRIPE_WEBHOOK_SECRET`.
+
 Optional / later phases:
 - ☐ `ANTHROPIC_MODEL` (defaults to a current Claude model)
 - ☐ `STRIPE_*`, `TWILIO_*`, `NEXT_PUBLIC_POSTHOG_*`
@@ -54,6 +65,10 @@ Set each for Production (and Preview if used). Never commit real values.
 - ☐ Submit the contact form; confirm it lands in `contact_requests`.
 - ☐ Hammer the public chat from one IP; confirm it returns HTTP 429 with a
   `Retry-After` header once the limit is hit.
+- ☐ Subscribe to a plan via Checkout (test card `4242…`); confirm the webhook
+  updates the org's plan/status, the billing page reflects it, and gated
+  features unlock (e.g. publishing more than 5 listings on Pro, auctions on
+  Enterprise). Then open the Customer Portal via **Manage billing**.
 
 ## 5. Hardening before real traffic
 

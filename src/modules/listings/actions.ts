@@ -7,6 +7,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireOrg } from "@/modules/organizations/context";
+import { canCreateListing } from "@/modules/billing/entitlements";
 import { enforce } from "@/lib/ratelimit";
 import { clientIp } from "@/lib/request";
 import {
@@ -35,8 +36,20 @@ export async function createListingAction(
     return { error: parsed.error.issues[0]?.message ?? "Invalid details" };
   }
 
-  const supabase = await createClient();
   const publish = formData.get("publish") === "true";
+
+  // Plan limit: publishing counts against the active-listing entitlement.
+  // Drafts are always allowed.
+  if (publish) {
+    const decision = await canCreateListing();
+    if (!decision.allowed) {
+      return {
+        error: `Your plan allows ${decision.limit} active listings. Upgrade to publish more, or save as a draft.`,
+      };
+    }
+  }
+
+  const supabase = await createClient();
   const { error } = await supabase.from("livestock_listings").insert({
     organization_id: organization.id,
     seller_name: organization.name,

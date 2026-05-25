@@ -13,6 +13,11 @@ export type ReceptionistContext = {
     AiAgent,
     "name" | "system_prompt" | "qualification_questions"
   > | null;
+  /**
+   * Pro+ entitlement: when false, the org's custom qualification script and
+   * extra instructions are ignored in favor of the basic default behavior.
+   */
+  advancedAI?: boolean;
 };
 
 /**
@@ -23,15 +28,20 @@ export type ReceptionistContext = {
  */
 export function buildSystemPrompt(ctx: ReceptionistContext): string {
   const businessName = ctx.profile?.display_name || ctx.orgName;
+  const advanced = ctx.advancedAI ?? false;
+  const defaultQuestions = [
+    "What are you looking for (livestock, beef, hauling, etc.)?",
+    "What's your name and the best way to reach you?",
+    "What's your timeline or location?",
+  ];
+  // Advanced AI (Pro+) unlocks the org's custom qualification script; the basic
+  // tier always uses the default questions.
   const questions =
+    advanced &&
     ctx.agent?.qualification_questions &&
     ctx.agent.qualification_questions.length > 0
       ? ctx.agent.qualification_questions
-      : [
-          "What are you looking for (livestock, beef, hauling, etc.)?",
-          "What's your name and the best way to reach you?",
-          "What's your timeline or location?",
-        ];
+      : defaultQuestions;
 
   const faqLines =
     ctx.profile?.faq && ctx.profile.faq.length > 0
@@ -63,7 +73,9 @@ export function buildSystemPrompt(ctx: ReceptionistContext): string {
     ctx.profile?.email ? `Email: ${ctx.profile.email}` : "",
     "",
     faqLines,
-    ctx.agent?.system_prompt ? `\nAdditional instructions:\n${ctx.agent.system_prompt}` : "",
+    advanced && ctx.agent?.system_prompt
+      ? `\nAdditional instructions:\n${ctx.agent.system_prompt}`
+      : "",
   ]
     .filter((line) => line !== "")
     .join("\n");

@@ -53,6 +53,25 @@ A living checklist. ✅ = implemented in Phase 1. ☐ = required before/at launc
 - ☐ Add CAPTCHA / Turnstile on public forms if spam persists past rate limits.
 - ☐ Add Redis health alerting so fail-closed outages are caught fast.
 
+## Billing & entitlements
+
+- ✅ Stripe webhook signature is verified (`constructEvent`) before any
+  processing; missing secret → 500, bad/absent signature → 400. Raw body is read
+  with `request.text()` (never pre-parsed).
+- ✅ Plan access is enforced **server-side only** via entitlement helpers
+  (`src/modules/billing/entitlements.ts`); the client is never trusted.
+- ✅ A non-active subscription (past_due/canceled/incomplete) is downgraded to
+  free, immediately blocking gated features (advanced AI, auctions, unlimited
+  listings).
+- ✅ Listing publish enforces the active-listing limit server-side.
+- ✅ Billing rows are written only by trusted code (checkout action + webhook,
+  via the service-role client); RLS still gives members read-only access.
+- ✅ Billing events are recorded to `audit_logs`.
+- ✅ Stripe secrets are server-only env vars; only the publishable key is
+  `NEXT_PUBLIC_`.
+- ☐ Add webhook idempotency (store processed event IDs) if duplicate processing
+  ever becomes a concern.
+
 ## AI safety
 
 - ✅ The receptionist system prompt is assembled server-side from trusted data;

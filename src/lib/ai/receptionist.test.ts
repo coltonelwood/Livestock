@@ -18,6 +18,7 @@ describe("buildSystemPrompt", () => {
       system_prompt: "Mention our spring bull sale.",
       qualification_questions: ["What breed are you after?"],
     },
+    advancedAI: true,
   };
 
   it("uses the display name and includes business facts", () => {
@@ -26,8 +27,18 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("Ellis County, KS");
     expect(prompt).toContain("Do you deliver?");
     expect(prompt).toContain("Within 200 miles.");
-    expect(prompt).toContain("What breed are you after?");
-    expect(prompt).toContain("Mention our spring bull sale.");
+  });
+
+  it("uses the custom qualification script + extra prompt only with advanced AI", () => {
+    const advanced = buildSystemPrompt(ctx);
+    expect(advanced).toContain("What breed are you after?");
+    expect(advanced).toContain("Mention our spring bull sale.");
+
+    // Basic tier ignores the custom script/instructions and uses defaults.
+    const basic = buildSystemPrompt({ ...ctx, advancedAI: false });
+    expect(basic).not.toContain("What breed are you after?");
+    expect(basic).not.toContain("Mention our spring bull sale.");
+    expect(basic).toContain("What are you looking for");
   });
 
   it("includes an instruction-injection guard", () => {
