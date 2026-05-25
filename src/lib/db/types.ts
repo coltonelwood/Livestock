@@ -103,6 +103,15 @@ export type Lead = Timestamps & {
   metadata: Record<string, unknown>;
 }
 
+export type Note = Timestamps & {
+  id: string;
+  organization_id: string;
+  entity_type: string;
+  entity_id: string;
+  body: string;
+  created_by: string | null;
+};
+
 export type Livestock = Timestamps & {
   id: string;
   organization_id: string;
@@ -208,6 +217,14 @@ export type ConversationMessage = {
   created_at: string;
 }
 
+/**
+ * On insert, every column is optional EXCEPT the ones named in `Required`
+ * (NOT NULL columns with no database default). Everything else is filled by a
+ * default or is nullable.
+ */
+type Insertable<Row, Required extends keyof Row> = Partial<Row> &
+  Pick<Row, Required>;
+
 type Table<Row, Insert, Update> = {
   Row: Row;
   Insert: Insert;
@@ -215,82 +232,35 @@ type Table<Row, Insert, Update> = {
   Relationships: [];
 };
 
-// Insert/Update helpers: db-defaulted columns become optional on insert.
-type Defaulted = "id" | "created_at" | "updated_at";
+type Def<Row, Required extends keyof Row> = Table<
+  Row,
+  Insertable<Row, Required>,
+  Partial<Row>
+>;
 
 export type Database = {
   public: {
     Tables: {
-      profiles: Table<Profile, Partial<Profile> & { id: string }, Partial<Profile>>;
-      organizations: Table<
-        Organization,
-        Omit<Organization, Defaulted> & Partial<Pick<Organization, Defaulted>>,
-        Partial<Organization>
-      >;
-      organization_members: Table<
-        OrganizationMember,
-        Omit<OrganizationMember, "id" | "created_at"> &
-          Partial<Pick<OrganizationMember, "id" | "created_at">>,
-        Partial<OrganizationMember>
-      >;
-      ranch_profiles: Table<
-        RanchProfile,
-        Omit<RanchProfile, "created_at" | "updated_at"> &
-          Partial<Pick<RanchProfile, "created_at" | "updated_at">>,
-        Partial<RanchProfile>
-      >;
-      customers: Table<
-        Customer,
-        Omit<Customer, Defaulted> & Partial<Pick<Customer, Defaulted>>,
-        Partial<Customer>
-      >;
-      leads: Table<
-        Lead,
-        Omit<Lead, Defaulted> & Partial<Pick<Lead, Defaulted>>,
-        Partial<Lead>
-      >;
-      livestock: Table<
-        Livestock,
-        Omit<Livestock, Defaulted> & Partial<Pick<Livestock, Defaulted>>,
-        Partial<Livestock>
-      >;
-      reminders: Table<
-        Reminder,
-        Omit<Reminder, Defaulted> & Partial<Pick<Reminder, Defaulted>>,
-        Partial<Reminder>
-      >;
-      livestock_listings: Table<
-        LivestockListing,
-        Omit<LivestockListing, Defaulted> &
-          Partial<Pick<LivestockListing, Defaulted>>,
-        Partial<LivestockListing>
-      >;
-      meat_products: Table<
-        MeatProduct,
-        Omit<MeatProduct, Defaulted> & Partial<Pick<MeatProduct, Defaulted>>,
-        Partial<MeatProduct>
-      >;
-      listing_inquiries: Table<
+      profiles: Def<Profile, "id">;
+      organizations: Def<Organization, "name" | "slug" | "business_type">;
+      organization_members: Def<OrganizationMember, "organization_id" | "user_id">;
+      ranch_profiles: Def<RanchProfile, "organization_id">;
+      customers: Def<Customer, "organization_id" | "name">;
+      leads: Def<Lead, "organization_id">;
+      notes: Def<Note, "organization_id" | "entity_type" | "entity_id" | "body">;
+      livestock: Def<Livestock, "organization_id">;
+      reminders: Def<Reminder, "organization_id" | "title" | "due_at">;
+      livestock_listings: Def<LivestockListing, "organization_id" | "title">;
+      meat_products: Def<MeatProduct, "organization_id" | "name">;
+      listing_inquiries: Def<
         ListingInquiry,
-        Omit<ListingInquiry, "id" | "created_at"> &
-          Partial<Pick<ListingInquiry, "id" | "created_at">>,
-        Partial<ListingInquiry>
+        "organization_id" | "listing_type" | "listing_id" | "name"
       >;
-      ai_agents: Table<
-        AiAgent,
-        Omit<AiAgent, Defaulted> & Partial<Pick<AiAgent, Defaulted>>,
-        Partial<AiAgent>
-      >;
-      conversations: Table<
-        Conversation,
-        Omit<Conversation, Defaulted> & Partial<Pick<Conversation, Defaulted>>,
-        Partial<Conversation>
-      >;
-      conversation_messages: Table<
+      ai_agents: Def<AiAgent, "organization_id">;
+      conversations: Def<Conversation, "organization_id">;
+      conversation_messages: Def<
         ConversationMessage,
-        Omit<ConversationMessage, "id" | "created_at"> &
-          Partial<Pick<ConversationMessage, "id" | "created_at">>,
-        Partial<ConversationMessage>
+        "conversation_id" | "organization_id" | "role" | "content"
       >;
     };
     Views: { [_ in never]: never };
