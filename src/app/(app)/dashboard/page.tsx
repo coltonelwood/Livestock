@@ -85,11 +85,18 @@ export default async function DashboardPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Coming soon</CardTitle>
+            <CardTitle>Sell &amp; grow</CardTitle>
           </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            Live auctions, transport load board, and integrated payments are on
-            the roadmap. Your data model is already prepared for them.
+          <CardContent className="space-y-2 text-sm">
+            <Link href="/dashboard/auctions" className="block text-primary hover:underline">
+              → Run an auction
+            </Link>
+            <Link href="/dashboard/marketplace" className="block text-primary hover:underline">
+              → Preview your public storefront
+            </Link>
+            <Link href="/dashboard/billing" className="block text-primary hover:underline">
+              → Manage your plan
+            </Link>
           </CardContent>
         </Card>
       </div>

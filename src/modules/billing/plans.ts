@@ -14,7 +14,7 @@ export type Entitlements = {
   maxActiveListings: number;
   /** Advanced AI receptionist (custom qualification script + extra prompt). */
   advancedAI: boolean;
-  /** Auction tools (placeholder access). */
+  /** Online auctions + live bidding. */
   auctions: boolean;
   /** Public marketplace storefront / DTC product listings. */
   storefront: boolean;
@@ -112,7 +112,7 @@ export const PLANS: Record<PlanId, PlanMeta> = {
     tagline: "For sale barns and multi-location operations.",
     features: [
       "Everything in Pro",
-      "Auction tools (placeholder access)",
+      "Online auctions & live bidding",
       "Team members",
       "Priority support",
       "Custom onboarding",

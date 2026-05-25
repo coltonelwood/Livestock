@@ -35,7 +35,7 @@ const tiers = [
     price: "Let's talk",
     period: "",
     description: "Auction houses and multi-location operations.",
-    features: ["Everything in Pro", "Unlimited team members", "Auctions (coming soon)", "Dedicated onboarding"],
+    features: ["Everything in Pro", "Unlimited team members", "Online auctions & live bidding", "Dedicated onboarding"],
     cta: "Contact sales",
     featured: false,
   },

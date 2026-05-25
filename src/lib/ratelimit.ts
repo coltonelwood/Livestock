@@ -34,6 +34,8 @@ export const LIMITS = {
   inquiry: { limit: 6, windowMs: 600_000, prefix: "rl:inquiry" },
   // Marketing demo/contact form.
   contact: { limit: 4, windowMs: 3_600_000, prefix: "rl:contact" },
+  // Authenticated auction bidding — anti-spam, per user.
+  bid: { limit: 40, windowMs: 60_000, prefix: "rl:bid" },
 } as const;
 
 export type LimiterName = keyof typeof LIMITS;

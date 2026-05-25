@@ -1,88 +1,134 @@
 import Link from "next/link";
+import { Gavel, MapPin } from "lucide-react";
 import type { Metadata } from "next";
 
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Section, SectionHeading } from "@/modules/marketing/components/section";
 import { FeatureHero } from "@/modules/marketing/components/feature-hero";
 import { AuctionLotCard } from "@/modules/marketing/components/preview-cards";
 import { MarketingCTA } from "@/modules/marketing/components/cta";
 import { demoAuctionLots } from "@/modules/marketing/demo-data";
+import { createClient } from "@/lib/supabase/server";
+import type { Auction } from "@/lib/db/types";
 
 export const metadata: Metadata = {
-  title: "Online livestock auctions",
-  description:
-    "Run timed and live online livestock auctions for sale barns and production sales.",
+  title: "Live & upcoming auctions",
+  description: "Browse live and upcoming online livestock auctions.",
 };
 
-const steps = [
-  { n: 1, title: "Catalog your lots", body: "Add consignments with photos, head count, weights, and notes — each gets its own lot page." },
-  { n: 2, title: "Open the sale", body: "Buyers bid online from the barn or the pickup. Timed sales close on a schedule; live sales run in real time." },
-  { n: 3, title: "Settle up", body: "Winning bids, buyers, and contacts flow into your records so settlement and follow-up are simple." },
-];
+export const dynamic = "force-dynamic";
 
-export default function AuctionsPage() {
+async function loadOpenAuctions(): Promise<Auction[]> {
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("auctions")
+      .select("*")
+      .in("status", ["live", "scheduled"])
+      .order("starts_at", { ascending: true })
+      .limit(40);
+    return data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function AuctionsPage() {
+  const auctions = await loadOpenAuctions();
+  const live = auctions.filter((a) => a.status === "live");
+  const upcoming = auctions.filter((a) => a.status === "scheduled");
+
   return (
     <>
       <FeatureHero
         eyebrow="Auctions"
-        title="Online auctions built for the sale barn"
-        subtitle="Take your timed and live sales online without losing the feel of a real auction. Catalog lots, take consignments, and let buyers bid from anywhere."
-        primaryCta={{ label: "Talk to us about auctions", href: "/contact" }}
+        title="Live & upcoming livestock auctions"
+        subtitle="Timed online sales from sale barns and breeders. Browse the catalog freely; log in to place a bid."
+        primaryCta={{ label: "Run your own sale", href: "/signup" }}
         secondaryCta={{ label: "See pricing", href: "/pricing" }}
       />
 
       <Section>
-        <SectionHeading eyebrow="How it works" title="From consignment to settlement" />
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {steps.map((s) => (
-            <div key={s.n} className="rounded-lg border border-border p-6">
-              <span className="flex size-9 items-center justify-center rounded-full bg-primary font-display text-lg font-bold text-primary-foreground">
-                {s.n}
-              </span>
-              <h3 className="mt-4 font-display text-lg font-semibold">{s.title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{s.body}</p>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      <Section tone="muted">
-        <SectionHeading
-          eyebrow="Sale catalog"
-          title="A clean catalog buyers can actually read"
-          description="Example lots from a timed sale. Real catalogs are built from your consignments."
-        />
-        <div className="mt-10 grid gap-5 md:grid-cols-3">
-          {demoAuctionLots.map((lot) => (
-            <AuctionLotCard key={lot.id} lot={lot} />
-          ))}
-        </div>
-      </Section>
-
-      <Section>
-        <div className="rounded-lg border border-border bg-secondary/40 p-8 text-center md:p-12">
-          <h2 className="font-display text-2xl font-bold">
-            Auction tools are part of the Enterprise plan
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-            Live and timed bidding is in active development. The data model is
-            built, and Enterprise customers get early access as it rolls out.
-          </p>
-          <div className="mt-6 flex justify-center gap-3">
-            <Button asChild>
-              <Link href="/pricing">View Enterprise plan</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/contact">Request early access</Link>
-            </Button>
+        {auctions.length > 0 ? (
+          <div className="space-y-10">
+            {live.length > 0 && (
+              <div>
+                <SectionHeading eyebrow="Bidding now" title="Live sales" />
+                <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                  {live.map((a) => (
+                    <PublicAuctionCard key={a.id} auction={a} live />
+                  ))}
+                </div>
+              </div>
+            )}
+            {upcoming.length > 0 && (
+              <div>
+                <SectionHeading eyebrow="On the calendar" title="Upcoming sales" />
+                <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                  {upcoming.map((a) => (
+                    <PublicAuctionCard key={a.id} auction={a} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="mb-8 rounded-lg border border-dashed border-accent/40 bg-accent/5 p-5 text-sm">
+              <span className="font-semibold">No live sales right now.</span> Here
+              are example lots so you can see how a sale looks.{" "}
+              <Link href="/signup" className="font-medium text-primary underline">
+                Run the first one.
+              </Link>
+            </div>
+            <div className="grid gap-5 md:grid-cols-3">
+              {demoAuctionLots.map((lot) => (
+                <AuctionLotCard key={lot.id} lot={lot} />
+              ))}
+            </div>
+          </>
+        )}
       </Section>
 
       <MarketingCTA
-        title="Run your next sale on OpenRange"
-        subtitle="Tell us about your sale barn and we'll help you get set up."
+        title="Take your sale online"
+        subtitle="Catalog lots, open bidding, and settle against reserve — all in one place."
       />
     </>
+  );
+}
+
+function PublicAuctionCard({ auction, live }: { auction: Auction; live?: boolean }) {
+  return (
+    <Link href={`/auctions/${auction.id}`}>
+      <Card className="h-full transition-colors hover:border-primary/40">
+        <CardContent className="space-y-3 pt-6">
+          <div className="flex items-start justify-between gap-2">
+            <Gavel className="size-5 text-accent" />
+            <Badge variant={live ? "success" : "secondary"}>
+              {live ? "Live" : "Upcoming"}
+            </Badge>
+          </div>
+          <h3 className="font-display text-lg font-semibold leading-snug">
+            {auction.title}
+          </h3>
+          {auction.location && (
+            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <MapPin className="size-3.5" /> {auction.location}
+            </p>
+          )}
+          <p className="border-t border-border pt-3 text-sm text-muted-foreground">
+            {auction.starts_at
+              ? new Date(auction.starts_at).toLocaleString()
+              : "Time TBA"}
+          </p>
+          <Button variant="outline" size="sm" className="w-full">
+            View catalog
+          </Button>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }

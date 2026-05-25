@@ -19,7 +19,7 @@ export default function AuctionHousesPage() {
           { title: "Consignor CRM", body: "Keep every consignor and buyer organized with notes and reminders." },
           { title: "Catch every inquiry", body: "AI receptionist fields sale-day questions and books follow-ups." },
           { title: "Listings & previews", body: "Promote upcoming lots with public pages and lead capture." },
-          { title: "Auctions coming soon", body: "Live and timed bidding is in development — the schema is ready now." },
+          { title: "Online auctions", body: "Run timed online sales with live bidding, reserves, and automatic settlement against reserve." },
         ],
       }}
     />

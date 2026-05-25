@@ -303,6 +303,62 @@ type Def<Row, Required extends keyof Row> = Table<
   Partial<Row>
 >;
 
+export type AuctionStatus = "scheduled" | "live" | "ended" | "cancelled";
+export type LotStatus = "open" | "sold" | "passed" | "cancelled";
+
+export type Auction = Timestamps & {
+  id: string;
+  organization_id: string;
+  listing_id: string | null;
+  title: string;
+  description: string | null;
+  location: string | null;
+  status: AuctionStatus;
+  starts_at: string | null;
+  ends_at: string | null;
+  starting_price_usd: number | null;
+  reserve_price_usd: number | null;
+};
+
+export type AuctionLot = Timestamps & {
+  id: string;
+  auction_id: string;
+  organization_id: string;
+  lot_number: number;
+  title: string;
+  description: string | null;
+  species: Species;
+  head_count: number;
+  opening_bid_usd: number;
+  reserve_price_usd: number | null;
+  bid_increment_usd: number;
+  status: LotStatus;
+  current_bid_usd: number | null;
+  current_bidder_id: string | null;
+  bid_count: number;
+  closes_at: string | null;
+  photos: string[];
+};
+
+export type Bid = {
+  id: string;
+  lot_id: string | null;
+  auction_id: string;
+  organization_id: string;
+  bidder_id: string | null;
+  amount_usd: number;
+  created_at: string;
+};
+
+/** Shape returned by the place_bid() RPC. */
+export type PlaceBidResult = {
+  ok: boolean;
+  lot_id: string;
+  current_bid: number;
+  bid_count: number;
+  min_next_bid: number;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -332,6 +388,12 @@ export type Database = {
       subscriptions: Def<Subscription, "organization_id">;
       audit_logs: Def<AuditLog, "action">;
       stripe_events: Def<StripeEvent, "id" | "type">;
+      auctions: Def<Auction, "organization_id" | "title">;
+      auction_lots: Def<
+        AuctionLot,
+        "auction_id" | "organization_id" | "lot_number" | "title"
+      >;
+      bids: Def<Bid, "auction_id" | "organization_id" | "amount_usd">;
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -339,6 +401,12 @@ export type Database = {
         Args: { p_name: string; p_slug: string; p_business_type: BusinessType };
         Returns: string;
       };
+      place_bid: {
+        Args: { p_lot_id: string; p_amount: number };
+        Returns: PlaceBidResult;
+      };
+      start_auction: { Args: { p_auction: string }; Returns: undefined };
+      end_auction: { Args: { p_auction: string }; Returns: undefined };
     };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };

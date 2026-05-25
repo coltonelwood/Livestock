@@ -33,13 +33,27 @@ trap cleanup EXIT
 
 as "$PGBIN/initdb -D $PGDATA -U postgres --auth=trust" >/dev/null
 as "$PGBIN/pg_ctl -D $PGDATA -o '-p $PORT -k $SOCK -c listen_addresses=\"\"' -w start" >/dev/null
-as "$PGBIN/createdb -h $SOCK -p $PORT -U postgres $DB"
 
 psql() { as "$PGBIN/psql -v ON_ERROR_STOP=1 -h $SOCK -p $PORT -U postgres -d $DB -f $1"; }
 
-psql "$TESTS/_local_auth_stub.sql" >/dev/null
-for f in "$MIG"/*.sql; do echo "applying $(basename "$f")"; psql "$f" >/dev/null; done
-psql "$TESTS/_local_roles.sql" >/dev/null
+# Each suite gets its OWN freshly-migrated database so fixed test ids never
+# collide between suites.
+applied=0
+status=0
+for suite in "$TESTS"/*_test.sql; do
+  as "$PGBIN/dropdb -h $SOCK -p $PORT -U postgres --if-exists $DB" >/dev/null
+  as "$PGBIN/createdb -h $SOCK -p $PORT -U postgres $DB"
+  psql "$TESTS/_local_auth_stub.sql" >/dev/null
+  for f in "$MIG"/*.sql; do
+    if [ "$applied" = "0" ]; then echo "applying $(basename "$f")"; fi
+    psql "$f" >/dev/null
+  done
+  applied=1
+  psql "$TESTS/_local_roles.sql" >/dev/null
 
-echo "--- RLS isolation suite ---"
-psql "$TESTS/rls_isolation_test.sql" | grep -E "PASSED|FAIL" || { echo "SUITE FAILED"; exit 1; }
+  echo "--- $(basename "$suite") ---"
+  if ! psql "$suite" | grep -E "PASSED|FAIL"; then
+    echo "SUITE FAILED: $suite"; status=1
+  fi
+done
+exit $status
