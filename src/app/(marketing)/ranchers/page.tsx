@@ -16,7 +16,7 @@ export default function RanchersPage() {
         subtitle:
           "OpenRange answers buyer questions, tracks your customers, and lists your cattle — so you never lose a sale to a missed call.",
         benefits: [
-          { title: "Never miss a buyer", body: "Your AI receptionist answers inquiries day and night and captures every lead." },
+          { title: "Never miss a buyer", body: "Your lead assistant answers common questions day and night and captures every lead." },
           { title: "Know your herd", body: "Animal records, weights, and reminders for vaccinations and follow-ups." },
           { title: "Sell where buyers look", body: "Public listing pages with built-in inquiry forms that feed your CRM." },
           { title: "One place for everything", body: "Customers, leads, conversations, and listings in a single dashboard." },

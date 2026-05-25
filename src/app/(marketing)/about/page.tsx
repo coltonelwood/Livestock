@@ -39,7 +39,7 @@ export default function AboutPage() {
           </p>
           <p>
             OpenRange brings the marketplace, the storefront, the auctions, and
-            the customer book into one place — with an AI receptionist that
+            the customer book into one place — with a lead assistant that
             catches the inquiries you can&apos;t. It&apos;s built mobile-first,
             for people who are usually outside and rarely at a desk.
           </p>

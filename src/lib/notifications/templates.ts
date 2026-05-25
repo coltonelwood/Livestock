@@ -109,9 +109,9 @@ export function buildEmail(type: NotificationType, d: TemplateData): Rendered {
       };
     case "lead_alert":
       return {
-        subject: `New lead from your AI receptionist`,
+        subject: `New lead from your Lead Assistant`,
         ...wrap([
-          `Your receptionist captured a new lead.`,
+          `Your Lead Assistant captured a new lead.`,
           d.leadName ? `Name: ${d.leadName}` : "",
           d.contact ? `Contact: ${d.contact}` : "",
         ].filter(Boolean)),

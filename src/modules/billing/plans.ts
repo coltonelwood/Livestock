@@ -12,7 +12,7 @@ export type PlanId = "free" | "starter" | "pro" | "enterprise";
 export type Entitlements = {
   /** Max ACTIVE livestock listings; Infinity = unlimited. */
   maxActiveListings: number;
-  /** Advanced AI receptionist (custom qualification script + extra prompt). */
+  /** Advanced lead assistant (custom AI qualification script + extra prompt). */
   advancedAI: boolean;
   /** Online auctions + live bidding. */
   auctions: boolean;
@@ -71,7 +71,7 @@ export const PLANS: Record<PlanId, PlanMeta> = {
     priceUsd: 0,
     priceLabel: "$0",
     tagline: "Get started and explore.",
-    features: ["Up to 5 active listings", "AI receptionist (basic)", "CRM basics"],
+    features: ["Up to 5 active listings", "Lead Assistant (basic)", "CRM basics"],
     purchasable: false,
   },
   starter: {
@@ -81,7 +81,7 @@ export const PLANS: Record<PlanId, PlanMeta> = {
     priceLabel: "$99/mo",
     tagline: "For getting organized and capturing leads.",
     features: [
-      "AI receptionist web chat",
+      "Lead Assistant web chat",
       "CRM basics",
       "5 active listings",
       "Basic ranch profile",

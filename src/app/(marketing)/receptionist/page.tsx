@@ -7,26 +7,26 @@ import { FeatureHero } from "@/modules/marketing/components/feature-hero";
 import { MarketingCTA } from "@/modules/marketing/components/cta";
 
 export const metadata: Metadata = {
-  title: "AI Ranch Receptionist",
+  title: "Lead Assistant",
   description:
-    "An AI receptionist that answers buyer questions, qualifies leads, and captures contacts on your ranch website — day and night.",
+    "A lead assistant that catches missed buyers — answers common questions, captures a name and phone number, and saves the lead on your ranch website, day and night.",
 };
 
 const capabilities = [
-  { icon: Clock, title: "Answers around the clock", body: "Buyers ask questions at 6 a.m. and 10 p.m. The receptionist is there when you're in the saddle or asleep." },
+  { icon: Clock, title: "Catches buyers you'd miss", body: "Buyers ask questions at 6 a.m. and 10 p.m. It answers when you're in the saddle or asleep, so no inquiry goes cold." },
   { icon: ShieldCheck, title: "Sticks to your facts", body: "It only answers from the business profile and FAQ you give it. It won't invent prices or make promises." },
-  { icon: ListChecks, title: "Qualifies the buyer", body: "It works your qualification questions into the conversation so you know who's serious." },
-  { icon: UserPlus, title: "Captures every lead", body: "Names, numbers, and the whole conversation are saved to your CRM automatically." },
+  { icon: ListChecks, title: "Asks the right questions", body: "It works your qualification questions into the conversation so you know who's serious." },
+  { icon: UserPlus, title: "Captures name and phone", body: "Names, numbers, and the whole conversation are saved to your CRM as a lead automatically." },
 ];
 
 export default function ReceptionistPage() {
   return (
     <>
       <FeatureHero
-        eyebrow="AI Ranch Receptionist"
-        title="The hand that always answers the phone"
-        subtitle="Answers buyer questions on your site, qualifies them, and saves every lead — day and night."
-        primaryCta={{ label: "Set up your receptionist", href: "/signup" }}
+        eyebrow="Lead Assistant"
+        title="Never lose a buyer to a missed message"
+        subtitle="Answers common questions on your site, gets a name and phone number, and saves every lead — day and night."
+        primaryCta={{ label: "Set up your lead assistant", href: "/signup" }}
         secondaryCta={{ label: "See pricing", href: "/pricing" }}
       />
 
@@ -106,14 +106,14 @@ export default function ReceptionistPage() {
           ))}
         </ol>
         <p className="mt-6 text-sm text-muted-foreground">
-          The receptionist runs on Anthropic&apos;s Claude. It requires an API
+          The lead assistant runs on Anthropic&apos;s Claude. It requires an API
           key to be configured on your deployment.
         </p>
       </Section>
 
       <MarketingCTA
         title="Stop losing buyers to voicemail"
-        subtitle="Set up your AI receptionist and capture every inquiry."
+        subtitle="Set up your lead assistant and capture every inquiry."
       />
     </>
   );

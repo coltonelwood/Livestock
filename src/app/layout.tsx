@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     template: "%s · OpenRange",
   },
   description:
-    "OpenRange is the operating system for modern ranching and livestock commerce: AI receptionist, ranch CRM, livestock marketplace, auctions, and direct-to-consumer beef.",
+    "OpenRange is the operating system for modern ranching and livestock commerce: a lead assistant that catches missed buyers, ranch CRM, livestock marketplace, auctions, and direct-to-consumer beef.",
 };
 
 export default function RootLayout({

@@ -4,7 +4,7 @@ import { sourceLabel, bucketReminder } from "@/modules/crm/util";
 
 describe("sourceLabel", () => {
   it("labels each lead source", () => {
-    expect(sourceLabel("web_chat")).toBe("AI receptionist");
+    expect(sourceLabel("web_chat")).toBe("Lead Assistant");
     expect(sourceLabel("listing_inquiry")).toBe("Listing inquiry");
     expect(sourceLabel("auction")).toBe("Auction");
     expect(sourceLabel("order")).toBe("DTC order");

@@ -17,7 +17,7 @@ export default function AuctionHousesPage() {
           "Manage relationships and inquiries today; live and timed auctions are on the roadmap with your data model already prepared.",
         benefits: [
           { title: "Consignor CRM", body: "Keep every consignor and buyer organized with notes and reminders." },
-          { title: "Catch every inquiry", body: "AI receptionist fields sale-day questions and books follow-ups." },
+          { title: "Catch every inquiry", body: "The lead assistant fields sale-day questions and books follow-ups." },
           { title: "Listings & previews", body: "Promote upcoming lots with public pages and lead capture." },
           { title: "Online auctions", body: "Run timed online sales with live bidding, reserves, and automatic settlement against reserve." },
         ],

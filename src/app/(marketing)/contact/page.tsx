@@ -18,7 +18,7 @@ export default function ContactPage() {
           help you capture more leads and sell more livestock.
         </p>
         <ul className="mt-8 space-y-3 text-sm text-muted-foreground">
-          <li>• See the AI receptionist live</li>
+          <li>• See the lead assistant live</li>
           <li>• Get help importing your customers</li>
           <li>• Ask about pricing for your business</li>
         </ul>

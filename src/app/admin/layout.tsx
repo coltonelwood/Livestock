@@ -29,7 +29,7 @@ export default async function AdminLayout({
             <Link href="/admin" className="flex items-center gap-2 font-bold">
               <ShieldCheck className="size-5" /> OpenRange Admin
             </Link>
-            <nav className="hidden gap-4 text-sm md:flex">
+            <nav className="hidden gap-4 text-sm lg:flex">
               {adminNav.map((i) => (
                 <Link key={i.href} href={i.href} className="opacity-80 hover:opacity-100">
                   {i.title}
@@ -42,7 +42,7 @@ export default async function AdminLayout({
           </Link>
         </div>
       </header>
-      <div className="border-b bg-foreground/90 p-2 text-background md:hidden">
+      <div className="border-b bg-foreground/90 p-2 text-background lg:hidden">
         <nav className="container flex gap-4 overflow-x-auto text-sm">
           {adminNav.map((i) => (
             <Link key={i.href} href={i.href} className="shrink-0 opacity-80">

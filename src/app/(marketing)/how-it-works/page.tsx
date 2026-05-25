@@ -15,8 +15,8 @@ const steps = [
   },
   {
     n: 2,
-    title: "Set up your AI receptionist",
-    body: "Add your FAQ and a greeting. The receptionist answers visitor questions and qualifies leads using only the facts you give it.",
+    title: "Set up your lead assistant",
+    body: "Add your FAQ and a greeting. The lead assistant answers common questions and captures a name and phone number, using only the facts you give it.",
   },
   {
     n: 3,

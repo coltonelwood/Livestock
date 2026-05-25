@@ -17,7 +17,7 @@ const tiers = [
     price: "$0",
     period: "/mo",
     description: "Get organized and capture your first leads.",
-    features: ["CRM (customers, leads, notes)", "Up to 10 listings", "AI receptionist (web chat)", "1 team member"],
+    features: ["CRM (customers, leads, notes)", "Up to 10 listings", "Lead Assistant (web chat)", "1 team member"],
     cta: "Start free",
     featured: false,
   },

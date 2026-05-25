@@ -3,7 +3,7 @@ import type { LeadSource } from "@/lib/db/types";
 /** Human label for where a lead came from. */
 export function sourceLabel(source: LeadSource): string {
   const map: Record<LeadSource, string> = {
-    web_chat: "AI receptionist",
+    web_chat: "Lead Assistant",
     listing_inquiry: "Listing inquiry",
     auction: "Auction",
     order: "DTC order",

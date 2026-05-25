@@ -89,7 +89,7 @@ export function ChatWidget({
         </span>
         <div>
           <p className="text-sm font-semibold">{businessName}</p>
-          <p className="text-xs text-muted-foreground">AI receptionist</p>
+          <p className="text-xs text-muted-foreground">Lead Assistant</p>
         </div>
       </div>
 

@@ -16,9 +16,9 @@ export default async function AdminConversationsPage() {
 
   return (
     <>
-      <h1 className="mb-2 text-2xl font-bold tracking-tight">AI conversations</h1>
+      <h1 className="mb-2 text-2xl font-bold tracking-tight">Lead Assistant conversations</h1>
       <p className="mb-6 text-sm text-muted-foreground">
-        Receptionist conversations across all organizations, for review.
+        Lead Assistant conversations across all organizations, for review.
       </p>
       <div className="grid gap-2">
         {(convos ?? []).map((c) => (

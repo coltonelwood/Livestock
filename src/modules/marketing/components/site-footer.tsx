@@ -10,7 +10,7 @@ const columns = [
       { title: "Livestock Marketplace", href: "/listings" },
       { title: "Beef Direct", href: "/beef" },
       { title: "Auctions", href: "/auctions" },
-      { title: "AI Receptionist", href: "/receptionist" },
+      { title: "Lead Assistant", href: "/receptionist" },
       { title: "Ranch CRM", href: "/crm" },
     ],
   },

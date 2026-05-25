@@ -41,7 +41,7 @@ export default async function LeadsPage() {
       {!leads || leads.length === 0 ? (
         <EmptyState
           title="No leads yet"
-          description="Leads from your AI receptionist and listing inquiries land here automatically. You can also add one by hand to start tracking a buyer."
+          description="Leads from your Lead Assistant and listing inquiries land here automatically. You can also add one by hand to start tracking a buyer."
           action={
             <Button asChild>
               <Link href="/dashboard/leads/new">Add your first lead</Link>
@@ -51,14 +51,14 @@ export default async function LeadsPage() {
       ) : (
         <div className="grid gap-3">
           {leads.map((lead) => (
-            <Card key={lead.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <Card key={lead.id} className="flex min-w-0 flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex min-w-0 items-center gap-2">
                   <p className="truncate font-medium">
                     {lead.name || lead.email || lead.phone || "Unnamed lead"}
                   </p>
-                  <Badge variant="secondary">{sourceLabel(lead.source)}</Badge>
-                  {lead.customer_id && <Badge variant="success">Customer</Badge>}
+                  <Badge variant="secondary" className="shrink-0">{sourceLabel(lead.source)}</Badge>
+                  {lead.customer_id && <Badge variant="success" className="shrink-0">Customer</Badge>}
                 </div>
                 {lead.summary && (
                   <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
@@ -69,7 +69,7 @@ export default async function LeadsPage() {
                   {[lead.email, lead.phone].filter(Boolean).join(" · ")}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
                 <LeadStatusSelect id={lead.id} status={lead.status} />
                 {!lead.customer_id && (
                   <form action={convertLeadAction}>

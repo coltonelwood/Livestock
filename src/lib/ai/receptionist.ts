@@ -51,7 +51,7 @@ export function buildSystemPrompt(ctx: ReceptionistContext): string {
       : "(No FAQ provided.)";
 
   return [
-    `You are the AI receptionist for ${businessName}, a ranching/livestock business${
+    `You are the lead assistant for ${businessName}, a ranching/livestock business${
       ctx.profile?.location ? ` based in ${ctx.profile.location}` : ""
     }.`,
     "Your job: greet visitors warmly, answer questions about the business using ONLY the facts provided below, and qualify them as a potential lead by gently collecting their needs and contact info.",
