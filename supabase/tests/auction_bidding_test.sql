@@ -164,4 +164,63 @@ exception when insufficient_privilege then null;
 end $$;
 reset role;
 
+-- TEST 13: cancel_auction — non-owner blocked, owner cancels sale + open lots.
+select set_config('request.jwt.claim.sub', :'u1', false);
+set role authenticated;
+do $$ begin
+  insert into public.auctions (id, organization_id, title, status, starts_at, ends_at)
+  values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2', current_setting('test.org_a')::uuid,
+          'Cancel Test Sale', 'scheduled', now(), now() + interval '1 day');
+  insert into public.auction_lots (id, auction_id, organization_id, lot_number, title, opening_bid_usd)
+  values ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2',
+          current_setting('test.org_a')::uuid, 1, 'Lot to cancel', 500);
+end $$;
+reset role;
+select set_config('request.jwt.claim.sub', :'u2', false);
+set role authenticated;
+do $$ begin
+  perform public.cancel_auction('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2');
+  raise exception 'FAIL t13: non-owner cancelled sale';
+exception when others then
+  if sqlerrm <> 'NOT_AUTHORIZED' then raise exception 'FAIL t13: %', sqlerrm; end if;
+end $$;
+reset role;
+select set_config('request.jwt.claim.sub', :'u1', false);
+set role authenticated;
+do $$ declare a text; l text; begin
+  perform public.cancel_auction('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2');
+  select status::text into a from public.auctions where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2';
+  select status::text into l from public.auction_lots where id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2';
+  if a <> 'cancelled' or l <> 'cancelled' then raise exception 'FAIL t13: a=% l=%', a, l; end if;
+end $$;
+reset role;
+
+-- TEST 14: close_auction (service role) settles a met-reserve lot as SOLD and
+-- records an auction.won audit for the winner.
+select set_config('request.jwt.claim.sub', :'u1', false);
+set role authenticated;
+do $$ begin
+  insert into public.auctions (id, organization_id, title, status, starts_at, ends_at)
+  values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3', current_setting('test.org_a')::uuid,
+          'Close Test Sale', 'scheduled', now(), now() + interval '1 day');
+  insert into public.auction_lots (id, auction_id, organization_id, lot_number, title, opening_bid_usd, reserve_price_usd, bid_increment_usd)
+  values ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb3', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3',
+          current_setting('test.org_a')::uuid, 1, 'Lot to sell', 1000, 1000, 100);
+  perform public.start_auction('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3');
+end $$;
+reset role;
+select set_config('request.jwt.claim.sub', :'u2', false);
+set role authenticated;
+do $$ begin perform public.place_bid('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb3', 1000); end $$;
+reset role;
+-- Service role (no auth.uid) closes the sale.
+do $$ declare l text; n int; begin
+  perform public.close_auction('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3');
+  select status::text into l from public.auction_lots where id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb3';
+  if l <> 'sold' then raise exception 'FAIL t14: lot status % (expected sold)', l; end if;
+  select count(*) into n from public.audit_logs
+    where action = 'auction.won' and entity_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb3';
+  if n <> 1 then raise exception 'FAIL t14: won-audit rows % (expected 1)', n; end if;
+end $$;
+
 select '=== ALL AUCTION TESTS PASSED ===' as result;

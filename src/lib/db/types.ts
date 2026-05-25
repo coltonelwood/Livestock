@@ -457,6 +457,9 @@ export type Database = {
       };
       start_auction: { Args: { p_auction: string }; Returns: undefined };
       end_auction: { Args: { p_auction: string }; Returns: undefined };
+      close_auction: { Args: { p_auction: string }; Returns: undefined };
+      cancel_auction: { Args: { p_auction: string }; Returns: undefined };
+      cancel_lot: { Args: { p_lot: string }; Returns: undefined };
       place_order: {
         Args: { p_items: { product_id: string; quantity: number }[] };
         Returns: PlaceOrderResult;

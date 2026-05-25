@@ -8,6 +8,9 @@ const adminNav = [
   { title: "Organizations", href: "/admin/organizations" },
   { title: "Users", href: "/admin/users" },
   { title: "Listings", href: "/admin/listings" },
+  { title: "Products", href: "/admin/products" },
+  { title: "Auctions", href: "/admin/auctions" },
+  { title: "Audit log", href: "/admin/audit" },
 ];
 
 export default async function AdminLayout({

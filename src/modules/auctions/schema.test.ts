@@ -1,6 +1,19 @@
 import { describe, expect, it } from "vitest";
 
-import { minimumBid, bidErrorMessage, createLotSchema } from "@/modules/auctions/schema";
+import { minimumBid, bidErrorMessage, createLotSchema, isAuctionDue } from "@/modules/auctions/schema";
+
+describe("isAuctionDue", () => {
+  const now = Date.UTC(2026, 0, 1, 12, 0, 0);
+  it("is due when the end time has passed", () => {
+    expect(isAuctionDue(new Date(now - 1000).toISOString(), now)).toBe(true);
+  });
+  it("is not due before the end time", () => {
+    expect(isAuctionDue(new Date(now + 1000).toISOString(), now)).toBe(false);
+  });
+  it("is never due without an end time", () => {
+    expect(isAuctionDue(null, now)).toBe(false);
+  });
+});
 
 describe("minimumBid", () => {
   it("uses the opening bid when there are no bids yet", () => {

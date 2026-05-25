@@ -17,6 +17,7 @@ grant execute on all functions in schema auth to anon, authenticated;
 -- grant above so the harness matches deployed behavior).
 revoke execute on function public.mark_order_paid(uuid, text) from anon, authenticated;
 revoke execute on function public.expire_order(uuid) from anon, authenticated;
+revoke execute on function public.close_auction(uuid) from anon, authenticated;
 
 -- Let the test session assume these roles.
 grant anon, authenticated to current_user;

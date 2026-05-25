@@ -20,6 +20,8 @@ import {
   addLotAction,
   startAuctionAction,
   endAuctionAction,
+  cancelAuctionAction,
+  cancelLotAction,
 } from "@/modules/auctions/actions";
 import type { AuctionActionState } from "@/modules/auctions/schema";
 import { redirect } from "next/navigation";
@@ -100,12 +102,20 @@ export default async function ManageAuctionPage({
               <Button type="submit">Go live</Button>
             </form>
           )}
-          {auction.status === "live" && (
-            <form action={endAuctionAction}>
-              <input type="hidden" name="auctionId" value={auction.id} />
-              <Button type="submit" variant="destructive">End sale</Button>
-            </form>
-          )}
+          <div className="flex gap-2">
+            {auction.status === "live" && (
+              <form action={endAuctionAction}>
+                <input type="hidden" name="auctionId" value={auction.id} />
+                <Button type="submit" variant="destructive">End sale</Button>
+              </form>
+            )}
+            {(auction.status === "scheduled" || auction.status === "live") && (
+              <form action={cancelAuctionAction}>
+                <input type="hidden" name="auctionId" value={auction.id} />
+                <Button type="submit" variant="outline">Cancel sale</Button>
+              </form>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -130,13 +140,22 @@ export default async function ManageAuctionPage({
                   Reserve {money(lot.reserve_price_usd)}
                 </p>
               </div>
-              <div className="text-right">
-                <p className="font-semibold text-primary">
-                  {lot.current_bid_usd == null ? "No bids" : money(lot.current_bid_usd)}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {lot.bid_count} bids · {lot.status}
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <p className="font-semibold text-primary">
+                    {lot.current_bid_usd == null ? "No bids" : money(lot.current_bid_usd)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {lot.bid_count} bids · {lot.status}
+                  </p>
+                </div>
+                {editable && lot.status === "open" && (
+                  <form action={cancelLotAction}>
+                    <input type="hidden" name="lotId" value={lot.id} />
+                    <input type="hidden" name="auctionId" value={auction.id} />
+                    <Button type="submit" variant="ghost" size="sm">Remove</Button>
+                  </form>
+                )}
               </div>
             </Card>
           ))}

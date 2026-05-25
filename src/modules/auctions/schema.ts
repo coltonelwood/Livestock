@@ -63,6 +63,16 @@ export function minimumBid(
   return currentBid == null ? openingBid : currentBid + increment;
 }
 
+/** True if a live auction has reached its end time and should be closed. */
+export function isAuctionDue(
+  endsAt: string | null,
+  nowMs: number = Date.now(),
+): boolean {
+  if (!endsAt) return false;
+  const t = new Date(endsAt).getTime();
+  return Number.isFinite(t) && t <= nowMs;
+}
+
 /** Map a place_bid() error message to friendly buyer-facing copy. */
 export function bidErrorMessage(raw: string): string {
   if (raw.startsWith("BID_TOO_LOW")) {

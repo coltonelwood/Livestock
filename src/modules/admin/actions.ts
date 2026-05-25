@@ -31,3 +31,32 @@ export async function archiveListingAction(formData: FormData) {
 
   revalidatePath("/admin/listings");
 }
+
+/** Moderation: archive a meat product. */
+export async function archiveProductAction(formData: FormData) {
+  await requirePlatformAdmin();
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+
+  const admin = createAdminClient();
+  await admin.from("meat_products").update({ status: "archived" }).eq("id", id);
+  await admin.from("audit_logs").insert({
+    action: "product.archived",
+    entity_type: "meat_product",
+    entity_id: id,
+    metadata: { via: "admin_moderation" },
+  });
+  revalidatePath("/admin/products");
+}
+
+/** Moderation: cancel an auction (platform admin). The RPC writes the audit. */
+export async function cancelAuctionAdminAction(formData: FormData) {
+  await requirePlatformAdmin();
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  // Per-user client: cancel_auction permits platform admins via is_platform_admin().
+  const { createClient } = await import("@/lib/supabase/server");
+  const supabase = await createClient();
+  await supabase.rpc("cancel_auction", { p_auction: id });
+  revalidatePath("/admin/auctions");
+}

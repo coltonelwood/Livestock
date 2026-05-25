@@ -146,6 +146,28 @@ export async function endAuctionAction(formData: FormData) {
   revalidatePath(`/auctions/${id}`);
 }
 
+export async function cancelAuctionAction(formData: FormData) {
+  const { error: gate } = await requireAuctionManager();
+  if (gate) return;
+  const id = String(formData.get("auctionId") ?? "");
+  if (!id) return;
+  const supabase = await createClient();
+  await supabase.rpc("cancel_auction", { p_auction: id });
+  revalidatePath(`/dashboard/auctions/${id}`);
+  revalidatePath(`/auctions/${id}`);
+}
+
+export async function cancelLotAction(formData: FormData) {
+  const { error: gate } = await requireAuctionManager();
+  if (gate) return;
+  const lotId = String(formData.get("lotId") ?? "");
+  const auctionId = String(formData.get("auctionId") ?? "");
+  if (!lotId) return;
+  const supabase = await createClient();
+  await supabase.rpc("cancel_lot", { p_lot: lotId });
+  revalidatePath(`/dashboard/auctions/${auctionId}`);
+}
+
 /** Public-facing: place a bid. Any authenticated user (not the seller) may bid. */
 export async function placeBidAction(
   _prev: BidState,
