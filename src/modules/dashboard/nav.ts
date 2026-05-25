@@ -9,6 +9,7 @@ import {
   Bot,
   Store,
   Gavel,
+  Package,
   CreditCard,
   type LucideIcon,
 } from "lucide-react";
@@ -21,6 +22,7 @@ export const dashboardNav: NavItem[] = [
   { title: "Conversations", href: "/dashboard/conversations", icon: MessagesSquare },
   { title: "Customers", href: "/dashboard/customers", icon: Users },
   { title: "Listings", href: "/dashboard/listings", icon: Tag },
+  { title: "Orders", href: "/dashboard/orders", icon: Package },
   { title: "Livestock", href: "/dashboard/livestock", icon: Beef },
   { title: "Reminders", href: "/dashboard/reminders", icon: Bell },
   { title: "Receptionist", href: "/dashboard/receptionist", icon: Bot },

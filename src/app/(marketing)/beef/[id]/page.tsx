@@ -4,9 +4,13 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { InquiryForm } from "@/modules/listings/components/inquiry-form";
 import { ChatWidget } from "@/modules/receptionist/components/chat-widget";
+import { addToCartAction } from "@/modules/commerce/actions";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -76,9 +80,51 @@ export default async function BeefDetailPage({
         </div>
 
         <div className="space-y-6">
+          {product.price_usd != null && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Buy direct</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {product.inventory != null && product.inventory <= 0 ? (
+                  <p className="font-medium text-destructive">Sold out</p>
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold text-primary">
+                      ${product.price_usd.toLocaleString()}
+                      <span className="text-sm font-normal text-muted-foreground">
+                        {" "}/ {product.unit}
+                      </span>
+                    </p>
+                    {product.inventory != null && product.inventory <= 5 && (
+                      <p className="text-sm text-amber-600">
+                        Only {product.inventory} left
+                      </p>
+                    )}
+                    <form action={addToCartAction} className="flex items-end gap-2">
+                      <input type="hidden" name="productId" value={product.id} />
+                      <div className="space-y-1">
+                        <Label htmlFor="quantity" className="text-xs">Qty</Label>
+                        <Input
+                          id="quantity"
+                          name="quantity"
+                          type="number"
+                          min="1"
+                          max={product.inventory ?? 99}
+                          defaultValue="1"
+                          className="h-10 w-20"
+                        />
+                      </div>
+                      <Button type="submit" className="flex-1">Add to cart</Button>
+                    </form>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardHeader>
-              <CardTitle>Order / ask a question</CardTitle>
+              <CardTitle>Ask a question</CardTitle>
             </CardHeader>
             <CardContent>
               <InquiryForm listingType="meat" listingId={product.id} />

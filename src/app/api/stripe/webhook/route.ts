@@ -135,6 +135,17 @@ async function handleEvent(admin: Admin, event: Stripe.Event): Promise<string | 
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
+
+      // DTC order checkout (mode=payment) carries an order_id. Marking paid is
+      // a pure status flip — inventory was already reserved at order creation,
+      // so a duplicate webhook can never double-deduct.
+      const orderId = session.metadata?.order_id ?? null;
+      if (orderId) {
+        await admin.rpc("mark_order_paid", { p_order: orderId, p_session: session.id });
+        await audit(admin, null, `commerce.${event.type}`, { order_id: orderId });
+        return null;
+      }
+
       const organizationId =
         session.client_reference_id ?? session.metadata?.organization_id ?? null;
       const customerId =
@@ -156,6 +167,16 @@ async function handleEvent(admin: Admin, event: Stripe.Event): Promise<string | 
         session_id: session.id,
       });
       return organizationId;
+    }
+
+    case "checkout.session.expired": {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const orderId = session.metadata?.order_id ?? null;
+      if (orderId) {
+        await admin.rpc("expire_order", { p_order: orderId });
+        await audit(admin, null, `commerce.${event.type}`, { order_id: orderId });
+      }
+      return null;
     }
 
     case "customer.subscription.created":

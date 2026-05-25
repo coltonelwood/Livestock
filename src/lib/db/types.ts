@@ -359,6 +359,51 @@ export type PlaceBidResult = {
   min_next_bid: number;
 };
 
+export type OrderStatus =
+  | "pending"
+  | "pending_payment"
+  | "paid"
+  | "fulfilled"
+  | "cancelled"
+  | "refunded";
+
+export type Order = Timestamps & {
+  id: string;
+  organization_id: string;
+  customer_id: string | null;
+  buyer_id: string | null;
+  buyer_email: string | null;
+  status: OrderStatus;
+  total_usd: number | null;
+  currency: string;
+  items: unknown;
+  stripe_payment_intent: string | null;
+  stripe_checkout_session_id: string | null;
+  paid_at: string | null;
+  fulfilled_at: string | null;
+  canceled_at: string | null;
+  refunded_at: string | null;
+};
+
+export type OrderItem = {
+  id: string;
+  order_id: string;
+  organization_id: string;
+  buyer_id: string | null;
+  product_id: string | null;
+  name: string;
+  unit_price_usd: number;
+  quantity: number;
+  line_total_usd: number;
+  created_at: string;
+};
+
+export type PlaceOrderResult = {
+  order_id: string;
+  total: number;
+  organization_id: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -394,6 +439,11 @@ export type Database = {
         "auction_id" | "organization_id" | "lot_number" | "title"
       >;
       bids: Def<Bid, "auction_id" | "organization_id" | "amount_usd">;
+      orders: Def<Order, "organization_id">;
+      order_items: Def<
+        OrderItem,
+        "order_id" | "organization_id" | "name" | "unit_price_usd" | "quantity" | "line_total_usd"
+      >;
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -407,6 +457,15 @@ export type Database = {
       };
       start_auction: { Args: { p_auction: string }; Returns: undefined };
       end_auction: { Args: { p_auction: string }; Returns: undefined };
+      place_order: {
+        Args: { p_items: { product_id: string; quantity: number }[] };
+        Returns: PlaceOrderResult;
+      };
+      mark_order_paid: { Args: { p_order: string; p_session?: string }; Returns: undefined };
+      expire_order: { Args: { p_order: string }; Returns: undefined };
+      cancel_order: { Args: { p_order: string }; Returns: undefined };
+      fulfill_order: { Args: { p_order: string }; Returns: undefined };
+      refund_order: { Args: { p_order: string }; Returns: undefined };
     };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };

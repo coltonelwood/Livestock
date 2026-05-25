@@ -12,5 +12,11 @@ grant insert, update, delete on all tables in schema public to authenticated;
 grant execute on all functions in schema public to anon, authenticated;
 grant execute on all functions in schema auth to anon, authenticated;
 
+-- Mirror production: sensitive RPCs that grant "money" status are service-role
+-- only (the migrations REVOKE them from public; re-apply here after the blanket
+-- grant above so the harness matches deployed behavior).
+revoke execute on function public.mark_order_paid(uuid, text) from anon, authenticated;
+revoke execute on function public.expire_order(uuid) from anon, authenticated;
+
 -- Let the test session assume these roles.
 grant anon, authenticated to current_user;

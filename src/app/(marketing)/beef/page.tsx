@@ -64,9 +64,15 @@ export default async function BeefPage() {
                       <h2 className="font-display text-lg font-semibold">
                         {p.name}
                       </h2>
-                      <Badge variant="outline">
-                        {p.product_type.replace("_", " ")}
-                      </Badge>
+                      {p.inventory != null && p.inventory <= 0 ? (
+                        <Badge variant="outline" className="border-destructive/40 text-destructive">
+                          Sold out
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline">
+                          {p.product_type.replace("_", " ")}
+                        </Badge>
+                      )}
                     </div>
                     <div className="border-t border-border pt-3">
                       <p className="text-lg font-bold text-primary">

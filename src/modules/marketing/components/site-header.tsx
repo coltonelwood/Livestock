@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Menu } from "lucide-react";
+import { Menu, ShoppingCart } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/modules/marketing/site-config";
@@ -29,6 +29,11 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-2 sm:flex">
+          <Button asChild variant="ghost" size="icon" aria-label="Cart">
+            <Link href="/cart">
+              <ShoppingCart className="size-5" />
+            </Link>
+          </Button>
           <Button asChild variant="ghost" size="sm">
             <Link href="/login">Log in</Link>
           </Button>
@@ -55,6 +60,18 @@ export function SiteHeader() {
                 </Link>
               ))}
               <div className="rule my-2" />
+              <Link
+                href="/cart"
+                className="rounded-md px-3 py-2 text-sm font-medium hover:bg-secondary"
+              >
+                Cart
+              </Link>
+              <Link
+                href="/orders"
+                className="rounded-md px-3 py-2 text-sm font-medium hover:bg-secondary"
+              >
+                My orders
+              </Link>
               <Link
                 href="/login"
                 className="rounded-md px-3 py-2 text-sm font-medium hover:bg-secondary"
