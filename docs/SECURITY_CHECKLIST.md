@@ -69,8 +69,10 @@ A living checklist. ✅ = implemented in Phase 1. ☐ = required before/at launc
 - ✅ Billing events are recorded to `audit_logs`.
 - ✅ Stripe secrets are server-only env vars; only the publishable key is
   `NEXT_PUBLIC_`.
-- ☐ Add webhook idempotency (store processed event IDs) if duplicate processing
-  ever becomes a concern.
+- ✅ **Webhook idempotency**: every event is tracked in `stripe_events` by its
+  Stripe event id. Already-processed redeliveries return 200 without re-applying
+  changes (no duplicate subscription writes or audit logs); failed events are
+  marked `failed` and reprocessed on the next Stripe retry. Covered by tests.
 
 ## AI safety
 

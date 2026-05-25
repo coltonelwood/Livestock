@@ -78,6 +78,18 @@ export type Subscription = Timestamps & {
   current_period_end: string | null;
 };
 
+export type StripeEventStatus = "processing" | "processed" | "failed";
+
+export type StripeEvent = {
+  id: string;
+  type: string;
+  organization_id: string | null;
+  status: StripeEventStatus;
+  error: string | null;
+  processed_at: string | null;
+  created_at: string;
+};
+
 export type AiInteraction = {
   id: string;
   organization_id: string;
@@ -318,6 +330,7 @@ export type Database = {
       contact_requests: Def<ContactRequest, "name" | "email">;
       subscriptions: Def<Subscription, "organization_id">;
       audit_logs: Def<AuditLog, "action">;
+      stripe_events: Def<StripeEvent, "id" | "type">;
     };
     Views: { [_ in never]: never };
     Functions: {
