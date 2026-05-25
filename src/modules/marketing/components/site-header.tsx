@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Menu, ShoppingCart } from "lucide-react";
+import { Menu, ShoppingCart, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/modules/marketing/site-config";
@@ -28,16 +28,21 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 sm:flex">
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Button asChild variant="ghost" size="icon" aria-label="Search the marketplace">
+            <Link href="/listings">
+              <Search className="size-5" />
+            </Link>
+          </Button>
           <Button asChild variant="ghost" size="icon" aria-label="Cart">
             <Link href="/cart">
               <ShoppingCart className="size-5" />
             </Link>
           </Button>
-          <Button asChild variant="ghost" size="sm">
+          <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
             <Link href="/login">Log in</Link>
           </Button>
-          <Button asChild size="sm">
+          <Button asChild size="sm" className="hidden sm:inline-flex">
             <Link href="/signup">Get started</Link>
           </Button>
         </div>

@@ -3,13 +3,11 @@ export const siteConfig = {
   tagline: "The operating system for modern livestock commerce.",
   description:
     "Built for ranchers, breeders, auction houses, haulers, and direct-to-consumer beef sellers. One platform for your marketplace listings, sales, customers, and the calls you can't always answer.",
-  // Primary public navigation — everything here is browsable without an account.
+  // Primary public navigation — kept short and marketplace-first.
   nav: [
     { title: "Marketplace", href: "/listings" },
-    { title: "Beef Direct", href: "/beef" },
+    { title: "Beef", href: "/beef" },
     { title: "Auctions", href: "/auctions" },
-    { title: "AI Receptionist", href: "/receptionist" },
-    { title: "Ranch CRM", href: "/crm" },
     { title: "Pricing", href: "/pricing" },
     { title: "About", href: "/about" },
   ],

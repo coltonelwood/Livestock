@@ -9,17 +9,11 @@ import {
 } from "@/modules/marketing/demo-data";
 
 describe("public navigation", () => {
-  it("exposes the core product pages without requiring an account", () => {
+  it("leads with the marketplace catalogs in the primary nav", () => {
     const hrefs = siteConfig.nav.map((n) => n.href);
-    for (const required of [
-      "/listings",
-      "/beef",
-      "/auctions",
-      "/receptionist",
-      "/crm",
-      "/pricing",
-      "/about",
-    ]) {
+    // Marketplace-first: catalogs are the primary nav. (Receptionist/CRM are
+    // still public pages, linked from the footer — just demoted from top nav.)
+    for (const required of ["/listings", "/beef", "/auctions", "/pricing", "/about"]) {
       expect(hrefs).toContain(required);
     }
   });

@@ -2,13 +2,12 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/server";
 import { demoBeefBoxes, formatUsd } from "@/modules/marketing/demo-data";
 import { BeefBoxCard } from "@/modules/marketing/components/preview-cards";
+import { CatalogCard, CatalogGrid } from "@/components/catalog/catalog-card";
 import { FilterShell, FilterField } from "@/modules/search/components/filter-shell";
 import { Pagination } from "@/modules/search/components/pagination";
 import { parseProductFilters, rangeFor, PRODUCT_TYPES } from "@/modules/search/query";
@@ -109,34 +108,23 @@ export default async function BeefPage({
           {products.length > 0 ? (
             <>
               <p className="mb-4 text-sm text-muted-foreground">{count} product{count === 1 ? "" : "s"}</p>
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              <CatalogGrid>
                 {products.map((p) => {
                   const soldOut = p.inventory != null && p.inventory <= 0;
                   return (
-                    <Link key={p.id} href={`/beef/${p.id}`}>
-                      <Card className="h-full transition-colors hover:border-primary/40">
-                        <CardContent className="space-y-3 pt-6">
-                          <div className="flex items-start justify-between gap-2">
-                            <h2 className="font-display text-lg font-semibold">{p.name}</h2>
-                            {soldOut ? (
-                              <Badge variant="outline" className="border-destructive/40 text-destructive">Sold out</Badge>
-                            ) : (
-                              <Badge variant="outline">{p.product_type.replace("_", " ")}</Badge>
-                            )}
-                          </div>
-                          <div className="border-t border-border pt-3">
-                            <p className="text-lg font-bold text-primary">
-                              {formatUsd(p.price_usd)}
-                              <span className="text-sm font-normal text-muted-foreground"> / {p.unit}</span>
-                            </p>
-                            {p.seller_name && <p className="text-xs text-muted-foreground">{p.seller_name}</p>}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
+                    <CatalogCard
+                      key={p.id}
+                      href={`/beef/${p.id}`}
+                      photos={p.photos}
+                      title={p.name}
+                      price={`${formatUsd(p.price_usd)} / ${p.unit}`}
+                      subtitle={p.seller_name ?? undefined}
+                      tag={p.product_type.replace("_", " ")}
+                      soldOut={soldOut}
+                    />
                   );
                 })}
-              </div>
+              </CatalogGrid>
               <Pagination basePath="/beef" page={f.page} count={count} baseParams={baseParams} />
             </>
           ) : hasFilters ? (

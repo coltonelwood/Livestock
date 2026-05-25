@@ -4,6 +4,7 @@ import { Logo } from "@/modules/marketing/components/logo";
 import { NavLinks } from "@/modules/dashboard/components/nav-links";
 import { OrgSwitcher } from "@/modules/dashboard/components/org-switcher";
 import { UserMenu } from "@/modules/dashboard/components/user-menu";
+import { DashboardBottomNav } from "@/modules/dashboard/components/dashboard-bottom-nav";
 import { requireOrg, getMemberships } from "@/modules/organizations/context";
 import { getProfile } from "@/lib/auth/session";
 
@@ -51,13 +52,14 @@ export default async function AppLayout({
           <UserMenu name={displayName} />
         </header>
 
-        {/* Mobile nav */}
-        <div className="border-b bg-muted/20 p-2 md:hidden">
-          <NavLinks />
-        </div>
-
-        <main className="flex-1 p-4 md:p-8">{children}</main>
+        <main className="flex-1 p-4 pb-20 md:p-8 md:pb-8">{children}</main>
       </div>
+
+      {/* Thumb-friendly mobile bottom nav (replaces the old top scroll-nav). */}
+      <DashboardBottomNav
+        memberships={memberships}
+        currentId={current.organization.id}
+      />
     </div>
   );
 }

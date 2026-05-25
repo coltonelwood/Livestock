@@ -1,16 +1,14 @@
 import Link from "next/link";
-import { MapPin } from "lucide-react";
 import type { Metadata } from "next";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/server";
 import { demoCattleListings, formatUsd } from "@/modules/marketing/demo-data";
 import { DemoListingCard } from "@/modules/marketing/components/preview-cards";
+import { CatalogCard, CatalogGrid } from "@/components/catalog/catalog-card";
 import { FilterShell } from "@/modules/search/components/filter-shell";
 import { Pagination } from "@/modules/search/components/pagination";
 import { parseListingFilters, rangeFor, SPECIES } from "@/modules/search/query";
@@ -117,30 +115,20 @@ export default async function PublicListingsPage({
           {listings.length > 0 ? (
             <>
               <p className="mb-4 text-sm text-muted-foreground">{count} listing{count === 1 ? "" : "s"}</p>
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              <CatalogGrid>
                 {listings.map((l) => (
-                  <Link key={l.id} href={`/listings/${l.id}`}>
-                    <Card className="h-full transition-colors hover:border-primary/40">
-                      <CardContent className="space-y-3 pt-6">
-                        <div className="flex items-start justify-between gap-2">
-                          <h2 className="font-display text-lg font-semibold leading-snug">{l.title}</h2>
-                          <Badge variant="outline">{l.species}</Badge>
-                        </div>
-                        {(l.breed || l.location) && (
-                          <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <MapPin className="size-3.5" />
-                            {[l.breed, l.location].filter(Boolean).join(" · ")}
-                          </p>
-                        )}
-                        <div className="border-t border-border pt-3">
-                          <p className="text-lg font-bold text-primary">{formatUsd(l.price_usd)}</p>
-                          <p className="text-xs text-muted-foreground">{l.seller_name}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
+                  <CatalogCard
+                    key={l.id}
+                    href={`/listings/${l.id}`}
+                    photos={l.photos}
+                    title={l.title}
+                    price={formatUsd(l.price_usd)}
+                    subtitle={l.seller_name ?? undefined}
+                    meta={[l.breed, l.location].filter(Boolean).join(" · ") || undefined}
+                    tag={l.species}
+                  />
                 ))}
-              </div>
+              </CatalogGrid>
               <Pagination basePath="/listings" page={f.page} count={count} baseParams={baseParams} />
             </>
           ) : hasFilters ? (
