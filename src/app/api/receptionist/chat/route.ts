@@ -12,6 +12,7 @@ import {
 import { enforce } from "@/lib/ratelimit";
 import { clientIp } from "@/lib/request";
 import { entitlementsForOrg } from "@/modules/billing/entitlements";
+import { enqueueNotification } from "@/lib/notifications/enqueue";
 
 export const runtime = "nodejs";
 
@@ -273,6 +274,19 @@ async function maybeCaptureLead(
       .from("conversations")
       .update({ lead_id: lead.id, visitor_contact: email ?? phone })
       .eq("id", args.conversationId);
+
+    // Alert the seller that the receptionist captured a lead (best-effort).
+    const { data: profile } = await admin
+      .from("ranch_profiles")
+      .select("email")
+      .eq("organization_id", args.organizationId)
+      .maybeSingle();
+    await enqueueNotification({
+      type: "lead_alert",
+      to: profile?.email ?? null,
+      organizationId: args.organizationId,
+      data: { leadName: args.visitorName ?? undefined, contact: email ?? phone ?? undefined },
+    });
   }
 }
 

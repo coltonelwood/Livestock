@@ -365,6 +365,19 @@ export type PlaceBidResult = {
   min_next_bid: number;
 };
 
+export type Notification = {
+  id: string;
+  organization_id: string | null;
+  type: string;
+  recipient_email: string | null;
+  subject: string | null;
+  status: "queued" | "sent" | "failed" | "skipped";
+  error: string | null;
+  payload: Record<string, unknown>;
+  created_at: string;
+  sent_at: string | null;
+};
+
 export type OrderStatus =
   | "pending"
   | "pending_payment"
@@ -450,6 +463,7 @@ export type Database = {
         OrderItem,
         "order_id" | "organization_id" | "name" | "unit_price_usd" | "quantity" | "line_total_usd"
       >;
+      notifications: Def<Notification, "type">;
     };
     Views: { [_ in never]: never };
     Functions: {

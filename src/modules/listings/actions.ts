@@ -10,6 +10,7 @@ import { requireOrg } from "@/modules/organizations/context";
 import { canCreateListing } from "@/modules/billing/entitlements";
 import { enforce } from "@/lib/ratelimit";
 import { clientIp } from "@/lib/request";
+import { enqueueNotification } from "@/lib/notifications/enqueue";
 import {
   inquirySchema,
   livestockListingSchema,
@@ -178,6 +179,26 @@ export async function submitInquiryAction(
     email,
     phone,
     message,
+  });
+
+  // Notify the seller and confirm to the buyer (best-effort; never blocks).
+  const { data: profile } = await admin
+    .from("ranch_profiles")
+    .select("display_name, email")
+    .eq("organization_id", listing.organization_id)
+    .maybeSingle();
+  const business = profile?.display_name ?? undefined;
+  await enqueueNotification({
+    type: "inquiry_alert",
+    to: profile?.email ?? null,
+    organizationId: listing.organization_id,
+    data: { business, leadName: parsed.data.name, contact: email ?? phone ?? undefined },
+  });
+  await enqueueNotification({
+    type: "inquiry_confirmation",
+    to: email,
+    organizationId: listing.organization_id,
+    data: { business, buyerName: parsed.data.name },
   });
 
   return { success: true };

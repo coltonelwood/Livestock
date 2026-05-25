@@ -11,6 +11,7 @@ import {
   runIdempotent,
   type WebhookEventStore,
 } from "@/modules/billing/idempotency";
+import { enqueueNotification } from "@/lib/notifications/enqueue";
 import type { StripeEventStatus } from "@/lib/db/types";
 
 export const runtime = "nodejs";
@@ -130,6 +131,33 @@ async function upsertFromSubscription(
   );
 }
 
+async function notifyOrderPaid(admin: Admin, orderId: string) {
+  const { data: order } = await admin
+    .from("orders")
+    .select("organization_id, buyer_email, total_usd")
+    .eq("id", orderId)
+    .maybeSingle();
+  if (!order) return;
+  const { data: profile } = await admin
+    .from("ranch_profiles")
+    .select("display_name, email")
+    .eq("organization_id", order.organization_id)
+    .maybeSingle();
+  const business = profile?.display_name ?? undefined;
+  await enqueueNotification({
+    type: "order_confirmation",
+    to: order.buyer_email,
+    organizationId: order.organization_id,
+    data: { business, orderId, total: Number(order.total_usd ?? 0) },
+  });
+  await enqueueNotification({
+    type: "order_alert",
+    to: profile?.email ?? null,
+    organizationId: order.organization_id,
+    data: { business, orderId, total: Number(order.total_usd ?? 0) },
+  });
+}
+
 /** Apply a verified Stripe event's side effects. Returns the org id if known. */
 async function handleEvent(admin: Admin, event: Stripe.Event): Promise<string | null> {
   switch (event.type) {
@@ -142,6 +170,7 @@ async function handleEvent(admin: Admin, event: Stripe.Event): Promise<string | 
       const orderId = session.metadata?.order_id ?? null;
       if (orderId) {
         await admin.rpc("mark_order_paid", { p_order: orderId, p_session: session.id });
+        await notifyOrderPaid(admin, orderId);
         await audit(admin, null, `commerce.${event.type}`, { order_id: orderId });
         return null;
       }
@@ -213,6 +242,17 @@ async function handleEvent(admin: Admin, event: Stripe.Event): Promise<string | 
           .from("subscriptions")
           .update({ status: "past_due" })
           .eq("organization_id", organizationId);
+        const { data: profile } = await admin
+          .from("ranch_profiles")
+          .select("email")
+          .eq("organization_id", organizationId)
+          .maybeSingle();
+        await enqueueNotification({
+          type: "payment_failed",
+          to: profile?.email ?? null,
+          organizationId,
+          data: {},
+        });
       }
       await audit(admin, organizationId, `billing.${event.type}`, {
         invoice_id: invoice.id,
