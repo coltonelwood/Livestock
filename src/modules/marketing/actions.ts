@@ -60,7 +60,12 @@ export async function submitContactAction(
     return { error: "Too many requests. Please try again later.", values };
   }
 
-  const admin = createAdminClient();
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch {
+    return { error: "Something went wrong. Please try again.", values };
+  }
   const { error } = await admin.from("contact_requests").insert({
     name: parsed.data.name,
     email: parsed.data.email,

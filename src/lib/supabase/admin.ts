@@ -2,7 +2,7 @@ import "server-only";
 
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
-import { publicEnv, serverEnv } from "@/lib/env";
+import { publicEnv, supabaseAdminEnv } from "@/lib/env";
 import type { Database } from "@/lib/db/types";
 
 /**
@@ -13,7 +13,7 @@ import type { Database } from "@/lib/db/types";
  */
 export function createAdminClient() {
   const pub = publicEnv();
-  const srv = serverEnv();
+  const srv = supabaseAdminEnv();
   return createSupabaseClient<Database>(
     pub.NEXT_PUBLIC_SUPABASE_URL,
     srv.SUPABASE_SERVICE_ROLE_KEY,

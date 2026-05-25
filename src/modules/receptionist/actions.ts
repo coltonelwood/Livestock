@@ -118,7 +118,15 @@ export async function captureChatLeadAction(
     return { error: "Too many messages from your connection. Please try again shortly.", values };
   }
 
-  const admin = createAdminClient();
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch {
+    return {
+      error: "We couldn't send your details just now. Please try again, or call the seller directly.",
+      values,
+    };
+  }
   const { data: org } = await admin
     .from("organizations")
     .select("id")

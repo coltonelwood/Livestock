@@ -55,13 +55,14 @@ export async function uploadImageAction(
   const photos: string[] = Array.isArray(row.photos) ? row.photos : [];
   if (photos.length >= MAX_IMAGES_PER_ITEM) return { error: "You've reached the photo limit for this item." };
 
-  const admin = createAdminClient();
   const path = `${organization.id}/${entityType}/${entityId}/${safeFilename(file.name)}`;
   const bytes = new Uint8Array(await file.arrayBuffer());
 
-  // Wrap all Storage/DB I/O: a thrown error here must surface as a friendly
+  // Wrap all Storage/DB I/O (incl. admin-client construction, which throws if the
+  // service-role env is missing): a failure here must surface as a friendly
   // message, never an unhandled 500 (the upload form is a core seller flow).
   try {
+    const admin = createAdminClient();
     const opts = { contentType: file.type, upsert: false };
     let { error: upErr } = await admin.storage.from(BUCKET).upload(path, bytes, opts);
 

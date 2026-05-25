@@ -279,7 +279,17 @@ export async function submitInquiryAction(
     };
   }
 
-  const admin = createAdminClient();
+  // Constructing the admin client throws if the service-role env is missing;
+  // degrade to a friendly error (and keep the buyer's text) instead of a 500.
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch {
+    return {
+      error: "We couldn't send your message just now. Please try again, or call the seller directly.",
+      values,
+    };
+  }
   const table = parsed.data.listingType === "livestock"
     ? "livestock_listings"
     : "meat_products";

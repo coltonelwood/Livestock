@@ -2,13 +2,13 @@ import "server-only";
 
 import Anthropic from "@anthropic-ai/sdk";
 
-import { serverEnv } from "@/lib/env";
+import { aiEnv } from "@/lib/env";
 
 let client: Anthropic | null = null;
 
 function getClient() {
   if (!client) {
-    client = new Anthropic({ apiKey: serverEnv().ANTHROPIC_API_KEY });
+    client = new Anthropic({ apiKey: aiEnv().ANTHROPIC_API_KEY });
   }
   return client;
 }
@@ -32,7 +32,7 @@ export async function chatComplete(
   system: string,
   messages: ChatTurn[],
 ): Promise<ChatResult> {
-  const model = serverEnv().ANTHROPIC_MODEL;
+  const model = aiEnv().ANTHROPIC_MODEL;
   const started = Date.now();
 
   const response = await getClient().messages.create({
