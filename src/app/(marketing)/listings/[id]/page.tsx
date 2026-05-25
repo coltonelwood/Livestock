@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InquiryForm } from "@/modules/listings/components/inquiry-form";
 import { ChatWidget } from "@/modules/receptionist/components/chat-widget";
+import { MediaImage } from "@/modules/media/components/media-image";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -54,6 +55,7 @@ export default async function ListingDetailPage({
 
       <div className="grid gap-8 md:grid-cols-2">
         <div>
+          <MediaImage photos={listing.photos} alt={listing.title} className="mb-5" />
           <div className="flex items-center gap-2">
             <h1 className="text-3xl font-bold tracking-tight">{listing.title}</h1>
             <Badge variant="outline">{listing.species}</Badge>

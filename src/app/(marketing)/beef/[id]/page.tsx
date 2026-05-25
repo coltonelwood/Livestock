@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { InquiryForm } from "@/modules/listings/components/inquiry-form";
 import { ChatWidget } from "@/modules/receptionist/components/chat-widget";
 import { addToCartAction } from "@/modules/commerce/actions";
+import { MediaImage } from "@/modules/media/components/media-image";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -58,6 +59,7 @@ export default async function BeefDetailPage({
 
       <div className="grid gap-8 md:grid-cols-2">
         <div>
+          <MediaImage photos={product.photos} alt={product.name} className="mb-5" />
           <div className="flex items-center gap-2">
             <h1 className="text-3xl font-bold tracking-tight">{product.name}</h1>
             <Badge variant="outline">{product.product_type.replace("_", " ")}</Badge>

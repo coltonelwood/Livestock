@@ -103,8 +103,10 @@ storefronts, service-role-only money RPCs, and the privilege-escalation guard.
 
 ## Known gaps (honest)
 
-- ⛔ **Media uploads (V3)** — image upload/storage not built; listings/products
-  show no photos yet. Needs Supabase Storage buckets + upload UI.
+- 🟡 **Media (V3)** — image **validation** (type/size/safe-filename) is built +
+  tested, and detail pages now **render** `photos[]` with a graceful fallback.
+  The **upload UI + Supabase Storage bucket** are the remaining piece (needs
+  live Storage to verify); seeded/real photo URLs already display.
 - 🟡 **Email/Stripe/Anthropic/Storage** — wired but require real credentials to
   verify end-to-end; unit/SQL tests cover the surrounding logic.
 - 🟡 **Auction auto-close** — route exists; needs a scheduler (Vercel Cron) +
