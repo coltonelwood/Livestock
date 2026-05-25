@@ -2,12 +2,15 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { chatComplete, type ChatTurn } from "@/lib/ai/claude";
 import {
   buildSystemPrompt,
   DEFAULT_GREETING,
   extractContact,
 } from "@/lib/ai/receptionist";
+import { enforce } from "@/lib/ratelimit";
+import { clientIp } from "@/lib/request";
 
 export const runtime = "nodejs";
 
@@ -28,8 +31,58 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const admin = createAdminClient();
   const { organizationId, message, visitorName } = parsed;
+
+  // Durable rate limiting. Authenticated org members hitting the dashboard test
+  // panel get a generous, fail-open limit; anonymous storefront visitors get a
+  // strict, FAIL-CLOSED limit (this endpoint costs model tokens).
+  const ip = clientIp(request.headers);
+  let authedUserId: string | null = null;
+  {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      const { data: membership } = await supabase
+        .from("organization_members")
+        .select("user_id")
+        .eq("organization_id", organizationId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (membership) authedUserId = user.id;
+    }
+  }
+
+  const gate = authedUserId
+    ? await enforce(
+        [{ name: "authedChat", identifier: `${authedUserId}:${organizationId}` }],
+        { failOpen: true },
+      )
+    : await enforce(
+        [
+          { name: "publicChat", identifier: ip },
+          { name: "orgChat", identifier: organizationId },
+        ],
+        { failOpen: false },
+      );
+
+  if (!gate.allowed) {
+    return NextResponse.json(
+      {
+        reply:
+          "You've sent a lot of messages in a short time. Please wait a minute and try again — or reach out by phone or email.",
+      },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": Math.ceil((gate.retryAfterMs ?? 60_000) / 1000).toString(),
+        },
+      },
+    );
+  }
+
+  const admin = createAdminClient();
 
   // Confirm the org exists (prevents writing conversations for random ids).
   const { data: org } = await admin

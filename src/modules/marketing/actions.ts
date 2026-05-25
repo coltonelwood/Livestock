@@ -1,8 +1,11 @@
 "use server";
 
 import { z } from "zod";
+import { headers } from "next/headers";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { enforce } from "@/lib/ratelimit";
+import { clientIp } from "@/lib/request";
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, "Enter your name").max(160),
@@ -31,6 +34,15 @@ export async function submitContactAction(
       return { success: true };
     }
     return { error: parsed.error.issues[0]?.message ?? "Please check your details." };
+  }
+
+  const ip = clientIp(await headers());
+  const gate = await enforce(
+    [{ name: "contact", identifier: ip }],
+    { failOpen: false },
+  );
+  if (!gate.allowed) {
+    return { error: "Too many requests. Please try again later." };
   }
 
   const admin = createAdminClient();

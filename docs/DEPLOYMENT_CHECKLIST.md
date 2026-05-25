@@ -25,6 +25,8 @@ Required:
 - ☐ `SUPABASE_SERVICE_ROLE_KEY` (server only — never exposed)
 - ☐ `ANTHROPIC_API_KEY`
 - ☐ `NEXT_PUBLIC_APP_URL` (production URL)
+- ☐ `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` (durable rate
+  limiting). **Without these, public AI endpoints fail closed (deny).**
 
 Optional / later phases:
 - ☐ `ANTHROPIC_MODEL` (defaults to a current Claude model)
@@ -50,10 +52,15 @@ Set each for Production (and Preview if used). Never commit real values.
   stored and the reply is sane.
 - ☐ Grant yourself `platform_admin`; verify `/admin` loads and moderation works.
 - ☐ Submit the contact form; confirm it lands in `contact_requests`.
+- ☐ Hammer the public chat from one IP; confirm it returns HTTP 429 with a
+  `Retry-After` header once the limit is hit.
 
 ## 5. Hardening before real traffic
 
-- ☐ Add a durable rate limiter for `/api/receptionist/chat` and public forms.
+- ☐ Create an Upstash Redis database and set `UPSTASH_REDIS_REST_URL` /
+  `UPSTASH_REDIS_REST_TOKEN`; verify chat/inquiry/contact rate limiting works
+  (durable limiter is implemented in `src/lib/ratelimit.ts`).
+- ☐ Add alerting on Redis availability (public endpoints fail closed without it).
 - ☐ Set security headers (CSP/HSTS) and review the API route's CORS.
 - ☐ Configure AI spend alerts and a per-org usage cap.
 - ☐ Configure Storage bucket policies before enabling document uploads.

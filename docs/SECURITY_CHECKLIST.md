@@ -40,9 +40,18 @@ A living checklist. ✅ = implemented in Phase 1. ☐ = required before/at launc
 - ✅ All mutations validate input with zod at the server boundary.
 - ✅ Public chat caps message length and conversation length (durable limit).
 - ✅ Honeypot fields on public inquiry & contact forms.
-- ☐ **Add a durable rate limiter** (e.g. Upstash) for `/api/receptionist/chat`
-  and public form submissions — in-memory limits don't work on serverless.
-- ☐ Add CAPTCHA / Turnstile on public forms if spam appears.
+- ✅ **Durable rate limiting** backed by Upstash Redis (`src/lib/ratelimit.ts`)
+  on `/api/receptionist/chat`, listing inquiries, and the contact form —
+  multi-dimensional (per IP, per org/widget, per user) and covered by tests.
+  - Public AI chat: strict per-IP limit + per-org aggregate cap.
+  - Authenticated dashboard test panel: generous per-user limit.
+  - Inquiry/contact: spam caps generous enough not to block real buyers.
+  - **Fail policy:** public endpoints FAIL CLOSED when Redis is unavailable;
+    only the authenticated dashboard test panel fails open. (Trade-off: a Redis
+    outage briefly blocks public submissions — accepted to prevent abuse. Keep
+    Upstash healthy and monitored.)
+- ☐ Add CAPTCHA / Turnstile on public forms if spam persists past rate limits.
+- ☐ Add Redis health alerting so fail-closed outages are caught fast.
 
 ## AI safety
 

@@ -2,10 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireOrg } from "@/modules/organizations/context";
+import { enforce } from "@/lib/ratelimit";
+import { clientIp } from "@/lib/request";
 import {
   inquirySchema,
   livestockListingSchema,
@@ -103,6 +106,20 @@ export async function submitInquiryAction(
       return { success: true };
     }
     return { error: parsed.error.issues[0]?.message ?? "Please check your details." };
+  }
+
+  // Durable rate limit (per IP and per listing). Public, no AI cost, but a spam
+  // vector — fail closed when the store is unavailable.
+  const ip = clientIp(await headers());
+  const gate = await enforce(
+    [
+      { name: "inquiry", identifier: ip },
+      { name: "inquiry", identifier: `listing:${parsed.data.listingId}` },
+    ],
+    { failOpen: false },
+  );
+  if (!gate.allowed) {
+    return { error: "Too many messages from your connection. Please try again shortly." };
   }
 
   const admin = createAdminClient();

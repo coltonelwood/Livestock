@@ -32,6 +32,7 @@ and [`docs/SCHEMA.md`](docs/SCHEMA.md) for the full plan.
 - Node.js 20+ and npm
 - A Supabase project (free tier is fine)
 - An Anthropic API key (for the receptionist)
+- An Upstash Redis database (for durable rate limiting; free tier is fine)
 
 ## Setup
 
@@ -42,7 +43,8 @@ npm install
 # 2. Configure environment
 cp .env.example .env.local
 #   Fill in NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
-#   SUPABASE_SERVICE_ROLE_KEY, and ANTHROPIC_API_KEY.
+#   SUPABASE_SERVICE_ROLE_KEY, ANTHROPIC_API_KEY, and the Upstash Redis
+#   credentials (UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN).
 
 # 3. Apply the database migrations to your Supabase project
 #    Option A — Supabase CLI (recommended):
@@ -96,6 +98,15 @@ npm test            # vitest unit tests
   Postgres, applies every migration, and runs a cross-tenant isolation suite
   proving the RLS policies hold. Requires a local Postgres install but **no
   Supabase project**. See [`supabase/tests/README.md`](supabase/tests/README.md).
+
+## Rate limiting
+
+Public endpoints (AI chat, listing inquiries, contact form) are protected by
+durable, multi-dimensional rate limiting backed by **Upstash Redis**
+(`src/lib/ratelimit.ts`), keyed by IP and by organization/listing. When Redis is
+**not configured or unreachable**, public AI endpoints **fail closed** (deny),
+while the authenticated dashboard test panel **fails open**. Limits live in
+`LIMITS` and are covered by unit tests.
 
 ## Project structure
 
