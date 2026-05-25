@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { CatalogCard } from "@/components/catalog/catalog-card";
 import { ChatWidget } from "@/modules/receptionist/components/chat-widget";
 import { createClient } from "@/lib/supabase/server";
 import { formatUsd } from "@/modules/marketing/demo-data";
@@ -106,46 +107,32 @@ export default async function RanchStorefrontPage({
         {listings.length > 0 && (
           <StoreSection title="Livestock for sale">
             {listings.map((l) => (
-              <Link key={l.id} href={`/listings/${l.id}`}>
-                <Card className="h-full transition-colors hover:border-primary/40">
-                  <CardContent className="space-y-2 pt-6">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-display font-semibold">{l.title}</h3>
-                      <Badge variant="outline">{l.species}</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{l.breed ?? ""}</p>
-                    <p className="font-bold text-primary">{formatUsd(l.price_usd)}</p>
-                  </CardContent>
-                </Card>
-              </Link>
+              <CatalogCard
+                key={l.id}
+                href={`/listings/${l.id}`}
+                photos={l.photos}
+                title={l.title}
+                price={formatUsd(l.price_usd)}
+                meta={l.breed ?? undefined}
+                tag={l.species}
+              />
             ))}
           </StoreSection>
         )}
 
         {products.length > 0 && (
           <StoreSection title="Beef direct">
-            {products.map((p) => {
-              const soldOut = p.inventory != null && p.inventory <= 0;
-              return (
-                <Link key={p.id} href={`/beef/${p.id}`}>
-                  <Card className="h-full transition-colors hover:border-primary/40">
-                    <CardContent className="space-y-2 pt-6">
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-display font-semibold">{p.name}</h3>
-                        {soldOut ? (
-                          <Badge variant="outline" className="border-destructive/40 text-destructive">Sold out</Badge>
-                        ) : (
-                          <Badge variant="outline">{p.product_type.replace("_", " ")}</Badge>
-                        )}
-                      </div>
-                      <p className="font-bold text-primary">
-                        {formatUsd(p.price_usd)}<span className="text-sm font-normal text-muted-foreground"> / {p.unit}</span>
-                      </p>
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-            })}
+            {products.map((p) => (
+              <CatalogCard
+                key={p.id}
+                href={`/beef/${p.id}`}
+                photos={p.photos}
+                title={p.name}
+                price={`${formatUsd(p.price_usd)} / ${p.unit}`}
+                tag={p.product_type.replace("_", " ")}
+                soldOut={p.inventory != null && p.inventory <= 0}
+              />
+            ))}
           </StoreSection>
         )}
 

@@ -66,39 +66,23 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      <div className="mt-8 grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Get set up</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <Link href="/dashboard/receptionist" className="block text-primary hover:underline">
-              → Configure your AI receptionist
-            </Link>
-            <Link href="/dashboard/listings/new" className="block text-primary hover:underline">
-              → Create your first listing
-            </Link>
-            <Link href="/dashboard/customers" className="block text-primary hover:underline">
-              → Add a customer
-            </Link>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Sell &amp; grow</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <Link href="/dashboard/auctions" className="block text-primary hover:underline">
-              → Run an auction
-            </Link>
-            <Link href="/dashboard/marketplace" className="block text-primary hover:underline">
-              → Preview your public storefront
-            </Link>
-            <Link href="/dashboard/billing" className="block text-primary hover:underline">
-              → Manage your plan
-            </Link>
-          </CardContent>
-        </Card>
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {[
+          { label: "New listing", href: "/dashboard/listings/new" },
+          { label: "Add customer", href: "/dashboard/customers/new" },
+          { label: "New auction", href: "/dashboard/auctions/new" },
+          { label: "Receptionist", href: "/dashboard/receptionist" },
+          { label: "Orders", href: "/dashboard/orders" },
+          { label: "Billing", href: "/dashboard/billing" },
+        ].map((a) => (
+          <Link
+            key={a.href}
+            href={a.href}
+            className="flex h-16 items-center justify-center rounded-lg border border-border bg-card p-3 text-center text-sm font-medium hover:border-primary/40"
+          >
+            {a.label}
+          </Link>
+        ))}
       </div>
     </>
   );
