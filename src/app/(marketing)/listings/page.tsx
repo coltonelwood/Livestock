@@ -12,6 +12,7 @@ import { CatalogCard, CatalogGrid } from "@/components/catalog/catalog-card";
 import { FilterShell } from "@/modules/search/components/filter-shell";
 import { Pagination } from "@/modules/search/components/pagination";
 import { parseListingFilters, rangeFor, SPECIES } from "@/modules/search/query";
+import { listingSeedImage } from "@/lib/seed-images";
 import type { LivestockListing } from "@/lib/db/types";
 
 export const metadata: Metadata = {
@@ -121,6 +122,7 @@ export default async function PublicListingsPage({
                     key={l.id}
                     href={`/listings/${l.id}`}
                     photos={l.photos}
+                    seedSrc={listingSeedImage(l)}
                     title={l.title}
                     price={formatUsd(l.price_usd)}
                     subtitle={l.seller_name ?? undefined}

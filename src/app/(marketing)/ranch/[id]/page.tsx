@@ -6,6 +6,7 @@ import { CatalogCard } from "@/components/catalog/catalog-card";
 import { ChatWidget } from "@/modules/receptionist/components/chat-widget";
 import { createClient } from "@/lib/supabase/server";
 import { formatUsd } from "@/modules/marketing/demo-data";
+import { listingSeedImage, beefSeedImage, auctionSeedImage } from "@/lib/seed-images";
 import type { RanchProfile, LivestockListing, MeatProduct, Auction } from "@/lib/db/types";
 
 export const dynamic = "force-dynamic";
@@ -85,6 +86,7 @@ export default async function RanchStorefrontPage({
               <CatalogCard
                 key={a.id}
                 href={`/auctions/${a.id}`}
+                seedSrc={auctionSeedImage(a)}
                 title={a.title}
                 meta={a.starts_at ? new Date(a.starts_at).toLocaleString() : undefined}
                 tag={a.status === "live" ? "Live" : "Upcoming"}
@@ -100,6 +102,7 @@ export default async function RanchStorefrontPage({
                 key={l.id}
                 href={`/listings/${l.id}`}
                 photos={l.photos}
+                seedSrc={listingSeedImage(l)}
                 title={l.title}
                 price={formatUsd(l.price_usd)}
                 meta={l.breed ?? undefined}
@@ -116,6 +119,7 @@ export default async function RanchStorefrontPage({
                 key={p.id}
                 href={`/beef/${p.id}`}
                 photos={p.photos}
+                seedSrc={beefSeedImage(p)}
                 title={p.name}
                 price={`${formatUsd(p.price_usd)} / ${p.unit}`}
                 tag={p.product_type.replace("_", " ")}

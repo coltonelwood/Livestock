@@ -14,6 +14,7 @@ import { FilterShell, FilterField } from "@/modules/search/components/filter-she
 import { Pagination } from "@/modules/search/components/pagination";
 import { parseAuctionFilters, rangeFor, AUCTION_STATUSES } from "@/modules/search/query";
 import { createClient } from "@/lib/supabase/server";
+import { auctionSeedImage } from "@/lib/seed-images";
 import type { Auction } from "@/lib/db/types";
 
 export const metadata: Metadata = {
@@ -89,6 +90,7 @@ export default async function AuctionsPage({
                   <CatalogCard
                     key={a.id}
                     href={`/auctions/${a.id}`}
+                    seedSrc={auctionSeedImage(a)}
                     title={a.title}
                     subtitle={a.location ?? undefined}
                     meta={a.starts_at ? new Date(a.starts_at).toLocaleString() : "Time TBA"}

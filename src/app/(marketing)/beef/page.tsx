@@ -11,6 +11,7 @@ import { CatalogCard, CatalogGrid } from "@/components/catalog/catalog-card";
 import { FilterShell, FilterField } from "@/modules/search/components/filter-shell";
 import { Pagination } from "@/modules/search/components/pagination";
 import { parseProductFilters, rangeFor, PRODUCT_TYPES } from "@/modules/search/query";
+import { beefSeedImage } from "@/lib/seed-images";
 import type { MeatProduct } from "@/lib/db/types";
 
 export const metadata: Metadata = {
@@ -116,6 +117,7 @@ export default async function BeefPage({
                       key={p.id}
                       href={`/beef/${p.id}`}
                       photos={p.photos}
+                      seedSrc={beefSeedImage(p)}
                       title={p.name}
                       price={`${formatUsd(p.price_usd)} / ${p.unit}`}
                       subtitle={p.seller_name ?? undefined}

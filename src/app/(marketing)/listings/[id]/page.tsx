@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InquiryForm } from "@/modules/listings/components/inquiry-form";
 import { MediaImage } from "@/modules/media/components/media-image";
 import { createClient } from "@/lib/supabase/server";
+import { listingSeedImage } from "@/lib/seed-images";
 
 export const dynamic = "force-dynamic";
 
@@ -54,7 +55,7 @@ export default async function ListingDetailPage({
 
       <div className="grid gap-8 md:grid-cols-2">
         <div>
-          <MediaImage photos={listing.photos} alt={listing.title} className="mb-5" />
+          <MediaImage photos={listing.photos} seedSrc={listingSeedImage(listing)} alt={listing.title} className="mb-5" sizes="(max-width: 768px) 100vw, 600px" />
           <div className="flex items-center gap-2">
             <h1 className="text-3xl font-bold tracking-tight">{listing.title}</h1>
             <Badge variant="outline">{listing.species}</Badge>

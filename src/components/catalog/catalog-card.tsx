@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 export function CatalogCard({
   href,
   photos,
+  seedSrc,
   title,
   price,
   subtitle,
@@ -18,6 +19,7 @@ export function CatalogCard({
 }: {
   href: string;
   photos?: string[] | null;
+  seedSrc?: string | null;
   title: string;
   price?: string;
   subtitle?: string;
@@ -31,7 +33,7 @@ export function CatalogCard({
       className="group block overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-md"
     >
       <div className="relative">
-        <MediaImage photos={photos} alt={title} className="rounded-none border-0" />
+        <MediaImage photos={photos} seedSrc={seedSrc} alt={title} className="rounded-none border-0" />
         {tag && (
           <span className="absolute left-2 top-2 rounded-md bg-ink/85 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-bone">
             {tag}

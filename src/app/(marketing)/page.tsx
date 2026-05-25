@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { CatalogCard, CatalogGrid } from "@/components/catalog/catalog-card";
 import { DemoListingCard } from "@/modules/marketing/components/preview-cards";
 import { demoCattleListings, formatUsd } from "@/modules/marketing/demo-data";
+import { listingSeedImage } from "@/lib/seed-images";
 import type { LivestockListing } from "@/lib/db/types";
 
 export const metadata: Metadata = {
@@ -95,6 +96,7 @@ export default async function HomePage() {
                 key={l.id}
                 href={`/listings/${l.id}`}
                 photos={l.photos}
+                seedSrc={listingSeedImage(l)}
                 title={l.title}
                 price={formatUsd(l.price_usd)}
                 subtitle={l.seller_name ?? undefined}
