@@ -16,7 +16,7 @@ export const metadata: Metadata = { title: "Listings" };
 function statusBadge(status: ListingStatus) {
   const variant =
     status === "active" ? "success" : status === "draft" ? "secondary" : "outline";
-  return <Badge variant={variant}>{status}</Badge>;
+  return <Badge variant={variant} className="shrink-0">{status}</Badge>;
 }
 
 function price(p: number | null) {
@@ -69,8 +69,8 @@ export default async function ListingsPage() {
         ) : (
           <div className="grid gap-3">
             {listings.map((l) => (
-              <Link key={l.id} href={`/dashboard/listings/${l.id}`}>
-                <Card className="flex items-center justify-between p-4 transition-colors hover:border-primary/40">
+              <Link key={l.id} href={`/dashboard/listings/${l.id}`} className="block min-w-0">
+                <Card className="flex items-center justify-between gap-3 p-4 transition-colors hover:border-primary/40">
                   <div className="min-w-0">
                     <p className="truncate font-medium">{l.title}</p>
                     <p className="text-sm text-muted-foreground">
@@ -94,8 +94,8 @@ export default async function ListingsPage() {
         ) : (
           <div className="grid gap-3">
             {products.map((p) => (
-              <Link key={p.id} href={`/dashboard/listings/meat/${p.id}`}>
-                <Card className="flex items-center justify-between p-4 transition-colors hover:border-primary/40">
+              <Link key={p.id} href={`/dashboard/listings/meat/${p.id}`} className="block min-w-0">
+                <Card className="flex items-center justify-between gap-3 p-4 transition-colors hover:border-primary/40">
                   <div className="min-w-0">
                     <p className="truncate font-medium">{p.name}</p>
                     <p className="text-sm text-muted-foreground">
