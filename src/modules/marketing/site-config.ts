@@ -1,15 +1,17 @@
 export const siteConfig = {
   name: "OpenRange",
-  tagline: "The operating system for modern ranching and livestock commerce.",
+  tagline: "The operating system for modern livestock commerce.",
   description:
-    "Run your whole operation in one place: an AI receptionist that never misses a call, a ranch CRM, a livestock marketplace, auctions, and direct-to-consumer beef sales.",
+    "Built for ranchers, breeders, auction houses, haulers, and direct-to-consumer beef sellers. One platform for your marketplace listings, sales, customers, and the calls you can't always answer.",
+  // Primary public navigation — everything here is browsable without an account.
   nav: [
-    { title: "How it works", href: "/how-it-works" },
-    { title: "Ranchers", href: "/ranchers" },
-    { title: "Breeders", href: "/breeders" },
-    { title: "Auction houses", href: "/auction-houses" },
-    { title: "Beef direct", href: "/beef" },
+    { title: "Marketplace", href: "/listings" },
+    { title: "Beef Direct", href: "/beef" },
+    { title: "Auctions", href: "/auctions" },
+    { title: "AI Receptionist", href: "/receptionist" },
+    { title: "Ranch CRM", href: "/crm" },
     { title: "Pricing", href: "/pricing" },
+    { title: "About", href: "/about" },
   ],
 } as const;
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/modules/dashboard/components/page-header";
 import { EmptyState } from "@/modules/dashboard/components/empty-state";
@@ -30,7 +31,12 @@ export default async function ConversationsPage() {
       {!conversations || conversations.length === 0 ? (
         <EmptyState
           title="No conversations yet"
-          description="When visitors chat with your receptionist on your storefront or listings, those conversations show up here."
+          description="When visitors chat with your AI receptionist on your storefront or listings, those conversations show up here. Set up your receptionist to start capturing them."
+          action={
+            <Button asChild>
+              <Link href="/dashboard/receptionist">Set up receptionist</Link>
+            </Button>
+          }
         />
       ) : (
         <div className="grid gap-3">

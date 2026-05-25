@@ -37,7 +37,15 @@ export default async function RemindersPage() {
       />
 
       {!reminders || reminders.length === 0 ? (
-        <EmptyState title="No reminders" description="Stay on top of follow-ups and herd health tasks." />
+        <EmptyState
+          title="No reminders yet"
+          description="Track vaccinations, preg checks, and follow-up calls so nothing slips. Add your first reminder to get started."
+          action={
+            <Button asChild>
+              <Link href="/dashboard/reminders/new">Add a reminder</Link>
+            </Button>
+          }
+        />
       ) : (
         <div className="grid gap-2">
           {reminders.map((r) => {

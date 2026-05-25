@@ -12,12 +12,23 @@ const config: Config = {
       screens: { "2xl": "1280px" },
     },
     extend: {
+      fontFamily: {
+        // Editorial serif for headlines — gives a rugged, established feel
+        // without a web-font network dependency at build time.
+        display: ['ui-serif', 'Georgia', 'Cambria', '"Times New Roman"', 'serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        // Brand bands: near-black warm "ink" and warm "bone" paper.
+        ink: {
+          DEFAULT: "hsl(150 18% 9%)",
+          foreground: "hsl(40 33% 95%)",
+        },
+        bone: "hsl(40 33% 96%)",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",

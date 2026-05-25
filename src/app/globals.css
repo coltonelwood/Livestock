@@ -24,10 +24,10 @@
     --muted: 35 20% 94%;
     --muted-foreground: 30 8% 42%;
 
-    --accent: 28 60% 48%;
-    --accent-foreground: 40 33% 98%;
+    --accent: 18 54% 40%;
+    --accent-foreground: 40 33% 97%;
 
-    --destructive: 0 72% 45%;
+    --destructive: 0 72% 42%;
     --destructive-foreground: 40 33% 98%;
 
     --border: 33 18% 86%;
@@ -53,7 +53,7 @@
     --muted: 30 8% 16%;
     --muted-foreground: 40 8% 64%;
 
-    --accent: 28 55% 55%;
+    --accent: 22 58% 52%;
     --accent-foreground: 30 10% 8%;
 
     --destructive: 0 62% 50%;
@@ -72,5 +72,16 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  /* Small uppercase label that sits above a headline. */
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-accent;
+  }
+  /* Hairline rule used to separate editorial sections. */
+  .rule {
+    @apply h-px w-full bg-border;
   }
 }

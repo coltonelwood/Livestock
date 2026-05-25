@@ -3,66 +3,70 @@ import Link from "next/link";
 import { siteConfig } from "@/modules/marketing/site-config";
 import { Logo } from "@/modules/marketing/components/logo";
 
+const columns = [
+  {
+    heading: "Platform",
+    links: [
+      { title: "Livestock Marketplace", href: "/listings" },
+      { title: "Beef Direct", href: "/beef" },
+      { title: "Auctions", href: "/auctions" },
+      { title: "AI Receptionist", href: "/receptionist" },
+      { title: "Ranch CRM", href: "/crm" },
+    ],
+  },
+  {
+    heading: "Company",
+    links: [
+      { title: "About", href: "/about" },
+      { title: "Pricing", href: "/pricing" },
+      { title: "How it works", href: "/how-it-works" },
+      { title: "Contact / Request a demo", href: "/contact" },
+    ],
+  },
+  {
+    heading: "Get started",
+    links: [
+      { title: "Create an account", href: "/signup" },
+      { title: "Log in", href: "/login" },
+    ],
+  },
+] as const;
+
 export function SiteFooter() {
   return (
-    <footer className="border-t bg-muted/30">
-      <div className="container grid gap-8 py-12 md:grid-cols-4">
+    <footer className="bg-ink text-ink-foreground">
+      <div className="container grid gap-10 py-14 md:grid-cols-4">
         <div className="space-y-3">
-          <Link href="/" className="flex items-center gap-2">
-            <Logo className="h-6 w-6 text-primary" />
-            <span className="font-bold">{siteConfig.name}</span>
+          <Link href="/" className="flex items-center gap-2.5">
+            <Logo className="h-7 w-7 text-bone" />
+            <span className="font-display text-lg font-bold">{siteConfig.name}</span>
           </Link>
-          <p className="text-sm text-muted-foreground">{siteConfig.tagline}</p>
+          <p className="max-w-xs text-sm text-ink-foreground/60">
+            {siteConfig.tagline}
+          </p>
         </div>
 
-        <div>
-          <h3 className="mb-3 text-sm font-semibold">Platform</h3>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            {siteConfig.nav.map((item) => (
-              <li key={item.href}>
-                <Link href={item.href} className="hover:text-foreground">
-                  {item.title}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div>
-          <h3 className="mb-3 text-sm font-semibold">Company</h3>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>
-              <Link href="/contact" className="hover:text-foreground">
-                Contact / Book a demo
-              </Link>
-            </li>
-            <li>
-              <Link href="/beef" className="hover:text-foreground">
-                Buy beef direct
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        <div>
-          <h3 className="mb-3 text-sm font-semibold">Get started</h3>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>
-              <Link href="/signup" className="hover:text-foreground">
-                Create an account
-              </Link>
-            </li>
-            <li>
-              <Link href="/login" className="hover:text-foreground">
-                Log in
-              </Link>
-            </li>
-          </ul>
-        </div>
+        {columns.map((col) => (
+          <div key={col.heading}>
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-ink-foreground/50">
+              {col.heading}
+            </h3>
+            <ul className="space-y-2.5 text-sm text-ink-foreground/75">
+              {col.links.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="hover:text-bone">
+                    {link.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
-      <div className="border-t py-6">
-        <p className="container text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
+      <div className="border-t border-white/10 py-6">
+        <p className="container text-center text-xs text-ink-foreground/50">
+          © {new Date().getFullYear()} {siteConfig.name}. Built for people who
+          work for a living.
         </p>
       </div>
     </footer>

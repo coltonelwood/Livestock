@@ -47,7 +47,12 @@ export default async function LeadsPage() {
       {!leads || leads.length === 0 ? (
         <EmptyState
           title="No leads yet"
-          description="Leads from your AI receptionist and listing inquiries will show up here automatically."
+          description="Leads from your AI receptionist and listing inquiries land here automatically. You can also add one by hand to start tracking a buyer."
+          action={
+            <Button asChild>
+              <Link href="/dashboard/leads/new">Add your first lead</Link>
+            </Button>
+          }
         />
       ) : (
         <div className="grid gap-3">

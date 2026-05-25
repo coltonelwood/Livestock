@@ -21,7 +21,7 @@ export default async function OnboardingPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-muted/30 px-4 py-12">
       <Link href="/" className="mb-8 flex items-center gap-2">
         <Logo className="h-8 w-8 text-primary" />
-        <span className="text-xl font-bold">OpenRange</span>
+        <span className="font-display text-xl font-bold">OpenRange</span>
       </Link>
       <Card className="w-full max-w-md">
         <CardHeader>

@@ -41,18 +41,28 @@ export async function getMemberships(): Promise<Membership[]> {
 }
 
 /**
- * Resolve the active organization. The cookie is only a HINT — it is always
- * validated against real membership, so a forged cookie cannot grant access.
- * Falls back to the first membership.
+ * Pure resolution of the active org from a membership list and a cookie hint.
+ * The hint is ALWAYS validated against real membership — a forged cookie can
+ * never select an org the user doesn't belong to. Falls back to the first
+ * membership; returns null when the user has no orgs (→ onboarding).
+ */
+export function resolveActiveOrg(
+  memberships: Membership[],
+  hintedOrgId: string | undefined,
+): Membership | null {
+  if (memberships.length === 0) return null;
+  const matched = memberships.find((m) => m.organization.id === hintedOrgId);
+  return matched ?? memberships[0];
+}
+
+/**
+ * Resolve the active organization for the current request (cookie hint
+ * validated against membership).
  */
 export async function getCurrentOrg(): Promise<Membership | null> {
   const memberships = await getMemberships();
-  if (memberships.length === 0) return null;
-
   const cookieStore = await cookies();
-  const hinted = cookieStore.get(ORG_COOKIE)?.value;
-  const matched = memberships.find((m) => m.organization.id === hinted);
-  return matched ?? memberships[0];
+  return resolveActiveOrg(memberships, cookieStore.get(ORG_COOKIE)?.value);
 }
 
 /** Require an active org; send brand-new users to onboarding. */

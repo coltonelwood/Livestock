@@ -27,7 +27,7 @@ export default async function AppLayout({
       <aside className="hidden w-64 shrink-0 flex-col border-r bg-muted/20 p-4 md:flex">
         <Link href="/dashboard" className="mb-6 flex items-center gap-2 px-2">
           <Logo className="h-7 w-7 text-primary" />
-          <span className="text-lg font-bold">OpenRange</span>
+          <span className="font-display text-lg font-bold">OpenRange</span>
         </Link>
         <div className="mb-4 px-1">
           <OrgSwitcher
