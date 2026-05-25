@@ -20,6 +20,7 @@ export const profileSchema = z.object({
   display_name: z.string().trim().max(160).optional().transform((v) => v || null),
   bio: z.string().trim().max(2000).optional().transform((v) => v || null),
   location: z.string().trim().max(160).optional().transform((v) => v || null),
+  website: z.string().trim().max(200).optional().transform((v) => v || null),
   phone: z.string().trim().max(40).optional().transform((v) => v || null),
   email: z.string().trim().max(160).optional().transform((v) => v || null),
   is_public: z.preprocess((v) => v === "on" || v === "true" || v === true, z.boolean()),

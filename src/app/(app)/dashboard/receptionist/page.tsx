@@ -119,6 +119,10 @@ export default async function ReceptionistPage() {
                     <Label htmlFor="email">Email</Label>
                     <Input id="email" name="email" defaultValue={profile?.email ?? ""} />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="website">Website</Label>
+                    <Input id="website" name="website" defaultValue={profile?.website ?? ""} placeholder="https://" />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="bio">About your business</Label>
@@ -143,6 +147,18 @@ export default async function ReceptionistPage() {
                   />
                   Show my profile publicly
                 </label>
+                {profile?.is_public && (
+                  <p className="text-sm">
+                    <a
+                      href={`/ranch/${organization.id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium text-primary hover:underline"
+                    >
+                      View your public storefront →
+                    </a>
+                  </p>
+                )}
               </SettingsForm>
             </CardContent>
           </Card>

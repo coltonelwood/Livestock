@@ -105,4 +105,30 @@ exception when raise_exception then
 end $$;
 reset role;
 
+-- TEST 9: storefront — ranch_profile is private by default, public only when
+-- the owner opts in (is_public).
+select set_config('request.jwt.claim.sub', '', false);
+set role anon;
+do $$ declare c int; begin
+  select count(*) into c from public.ranch_profiles
+    where organization_id = current_setting('test.org_a')::uuid;
+  if c <> 0 then raise exception 'FAIL t9: anon saw a private ranch profile'; end if;
+end $$;
+reset role;
+select set_config('request.jwt.claim.sub', :'u1', false);
+set role authenticated;
+do $$ begin
+  update public.ranch_profiles set is_public = true
+    where organization_id = current_setting('test.org_a')::uuid;
+end $$;
+reset role;
+select set_config('request.jwt.claim.sub', '', false);
+set role anon;
+do $$ declare c int; begin
+  select count(*) into c from public.ranch_profiles
+    where organization_id = current_setting('test.org_a')::uuid;
+  if c <> 1 then raise exception 'FAIL t9: anon cannot see a public storefront (%)', c; end if;
+end $$;
+reset role;
+
 select '=== ALL RLS TESTS PASSED ===' as result;

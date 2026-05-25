@@ -82,7 +82,11 @@ export default async function ListingDetailPage({
             )}
             <div className="flex gap-2">
               <dt className="text-muted-foreground">Seller:</dt>
-              <dd>{listing.seller_name}</dd>
+              <dd>
+                <Link href={`/ranch/${listing.organization_id}`} className="text-primary hover:underline">
+                  {listing.seller_name}
+                </Link>
+              </dd>
             </div>
           </dl>
           {listing.description && (
