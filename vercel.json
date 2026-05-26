@@ -3,7 +3,7 @@
   "crons": [
     {
       "path": "/api/auctions/close-due",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 13 * * *"
     }
   ]
 }
