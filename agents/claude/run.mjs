@@ -20,6 +20,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { adminClient } from "../lib/supabase.mjs";
 import { targetFor, parseItems, prepareRows } from "../lib/agent-io.mjs";
+import { retrieveMemories, recordDecision, touchMemories, loadPlaybook } from "../lib/memory.mjs";
+import { buildPromptContext } from "../lib/memory-core.mjs";
+
+const PLAYBOOK_FOR = {
+  growth: "seller-acquisition", content: "content-strategy",
+  customer_success: "seller-acquisition", design_ux: "qa-debugging",
+};
 
 const agent = process.argv[2];
 if (!agent) { console.error("usage: run.mjs <agent>"); process.exit(2); }
@@ -57,12 +64,18 @@ if (db) {
   context = `Marketplace snapshot: ${orgs ?? 0} orgs, ${listings ?? 0} active listings, ${products ?? 0} active beef products.`;
 }
 
+// Learning loop — load relevant memory + the active playbook before acting.
+const selection = await retrieveMemories(db, { agent });
+const playbook = PLAYBOOK_FOR[agent] ? await loadPlaybook(db, PLAYBOOK_FOR[agent]) : null;
+const memoryContext = buildPromptContext(selection, { playbook });
+
 const Anthropic = (await import("@anthropic-ai/sdk")).default;
 const client = new Anthropic({ apiKey });
 const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
 
 const task = [
   context,
+  memoryContext ? `\nWHAT WE'VE LEARNED (use this; don't repeat failed tactics):\n${memoryContext}\n` : "",
   "",
   `Produce up to 15 high-quality proposals as STRICT JSON: {"items": [ ... ]}.`,
   `Each item must be a row for the "${table}" table per your instructions.`,
@@ -90,6 +103,16 @@ const rows = prepareRows(agent, items);
 if (db) {
   const { error } = await db.from(table).insert(rows);
   if (error) { await finish("failed", `insert into ${table} failed: ${error.message}`); process.exit(1); }
+  // Audit the decision + which memories informed it (the learning loop's record).
+  const memoryIds = selection.memories.map((m) => m.id);
+  await recordDecision(db, {
+    runId, agent,
+    action: `proposed ${rows.length} draft(s) to ${table}`,
+    rationale: `Grounded in ${memoryIds.length} memory item(s)${playbook ? ` + playbook ${playbook.slug}` : ""}.`,
+    memoryIds, expectedOutcome: "admin reviews & approves before any external action",
+    riskLevel: "low",
+  });
+  await touchMemories(db, memoryIds);
 }
-await finish("success", `wrote ${rows.length} pending proposal(s) to ${table}`, { count: rows.length, table });
+await finish("success", `wrote ${rows.length} pending proposal(s) to ${table}`, { count: rows.length, table, memoryUsed: selection.memories.length });
 process.exit(0);

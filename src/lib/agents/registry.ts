@@ -25,6 +25,7 @@ export const AGENTS: AgentMeta[] = [
   { name: "revenue", label: "Revenue", purpose: "Monetization, pricing, upsell, featured-listing and subscription-conversion ideas.", schedule: "weekly", status: "scaffolded" },
   { name: "trust_safety", label: "Trust & Safety", purpose: "Flags suspicious/spam/duplicate listings & accounts into a moderation queue. Never auto-bans.", schedule: "daily", status: "scaffolded" },
   { name: "design_ux", label: "Design / UX", purpose: "Audits mobile UX, onboarding friction, visual consistency, trust; proposes UI improvements.", schedule: "weekly", status: "scaffolded" },
+  { name: "improve", label: "Self-Improvement", purpose: "Weekly self-scoring: aggregates runs/findings/feedback/approvals into an improvement report (no LLM, no fabrication).", schedule: "weekly", status: "live" },
 ];
 
 export function agentLabel(name: string): string {

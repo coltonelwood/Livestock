@@ -428,7 +428,8 @@ export type PlaceOrderResult = {
 // ── Supervised agent operations system ──
 export type AgentName =
   | "ops" | "code" | "growth" | "content" | "ad_creative" | "analytics"
-  | "liquidity" | "seo" | "customer_success" | "revenue" | "trust_safety" | "design_ux";
+  | "liquidity" | "seo" | "customer_success" | "revenue" | "trust_safety" | "design_ux"
+  | "improve";
 
 export type AgentRun = {
   id: string;
@@ -575,6 +576,144 @@ export type OptimizationSuggestion = {
   created_at: string;
 };
 
+// ── Agent memory & learning layer ──
+export type MemoryScope = "global" | "agent" | "org" | "user";
+
+export type AgentMemory = Timestamps & {
+  id: string;
+  agent: string | null;
+  memory_type: string;
+  summary: string;
+  detail: string | null;
+  source: string | null;
+  confidence_score: number;
+  related_entity_type: string | null;
+  related_entity_id: string | null;
+  tags: string[];
+  scope: MemoryScope;
+  organization_id: string | null;
+  user_id: string | null;
+  status: "active" | "pending" | "rejected" | "archived";
+  pinned: boolean;
+  created_by: string | null;
+  approved_by: string | null;
+  last_used_at: string | null;
+  expires_at: string | null;
+};
+
+export type AgentLesson = Timestamps & {
+  id: string;
+  agent: string;
+  category: string;
+  lesson: string;
+  confidence_score: number;
+  evidence_count: number;
+  tags: string[];
+  status: "proposed" | "approved" | "rejected" | "archived";
+  approved_by: string | null;
+};
+
+export type AgentDecision = {
+  id: string;
+  run_id: string | null;
+  agent: string;
+  action: string;
+  rationale: string | null;
+  memory_ids: string[];
+  expected_outcome: string | null;
+  risk_level: "low" | "medium" | "high";
+  confidence_score: number | null;
+  created_at: string;
+};
+
+export type AgentFeedback = {
+  id: string;
+  agent: string | null;
+  target_type: string;
+  target_id: string | null;
+  rating: "useful" | "not_useful" | "partial";
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type AgentExperiment = Timestamps & {
+  id: string;
+  agent: string;
+  name: string;
+  hypothesis: string;
+  audience: string | null;
+  success_metric: string | null;
+  baseline: string | null;
+  requires_spend: boolean;
+  status: "proposed" | "approved" | "running" | "complete" | "adopted" | "rejected" | "retest" | "needs_data";
+  decision: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  approved_by: string | null;
+};
+
+export type AgentExperimentResult = {
+  id: string;
+  experiment_id: string;
+  variant: string;
+  metric: string | null;
+  value: number | null;
+  sample_size: number | null;
+  notes: string | null;
+  recorded_at: string;
+};
+
+export type AgentPlaybook = Timestamps & {
+  id: string;
+  slug: string;
+  title: string;
+  objective: string | null;
+  audience: string | null;
+  steps: string | null;
+  approved_angles: string[];
+  disallowed_tactics: string[];
+  success_metrics: string | null;
+  examples: string | null;
+  owner: string | null;
+  version: number;
+  status: "draft" | "active" | "pending_update" | "archived";
+  pending_changes: Record<string, unknown> | null;
+  proposed_by: string | null;
+  approved_by: string | null;
+};
+
+export type AgentPreference = Timestamps & {
+  id: string;
+  scope: MemoryScope;
+  agent: string | null;
+  organization_id: string | null;
+  user_id: string | null;
+  key: string;
+  value: string;
+  created_by: string | null;
+};
+
+export type AgentKnowledgeSource = {
+  id: string;
+  name: string;
+  url: string | null;
+  kind: string;
+  allowed: boolean;
+  notes: string | null;
+  created_at: string;
+};
+
+export type AgentPerformanceMetric = {
+  id: string;
+  agent: string;
+  period: string | null;
+  metric: string;
+  value: number;
+  detail: Record<string, unknown>;
+  created_at: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -628,6 +767,16 @@ export type Database = {
       moderation_queue: Def<ModerationItem, "entity_type" | "reason">;
       churn_risks: Def<ChurnRisk, "organization_id">;
       optimization_suggestions: Def<OptimizationSuggestion, "agent" | "area" | "title">;
+      agent_memories: Def<AgentMemory, "memory_type" | "summary">;
+      agent_lessons: Def<AgentLesson, "agent" | "category" | "lesson">;
+      agent_decisions: Def<AgentDecision, "agent" | "action">;
+      agent_feedback: Def<AgentFeedback, "target_type" | "rating">;
+      agent_experiments: Def<AgentExperiment, "agent" | "name" | "hypothesis">;
+      agent_experiment_results: Def<AgentExperimentResult, "experiment_id" | "variant">;
+      agent_playbooks: Def<AgentPlaybook, "slug" | "title">;
+      agent_preferences: Def<AgentPreference, "key" | "value">;
+      agent_knowledge_sources: Def<AgentKnowledgeSource, "name">;
+      agent_performance_metrics: Def<AgentPerformanceMetric, "agent" | "metric">;
     };
     Views: { [_ in never]: never };
     Functions: {

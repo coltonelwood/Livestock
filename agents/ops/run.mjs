@@ -18,6 +18,15 @@ import fs from "node:fs";
 import { chromium } from "playwright";
 import { routeFinding, overflowFinding, linkFinding, renderReport, worstSeverity } from "../lib/checks.mjs";
 import { adminClient, sendReportEmail } from "../lib/supabase.mjs";
+import { recordLesson, recordDecision, recordMetric } from "../lib/memory.mjs";
+
+function isoWeek(d = new Date()) {
+  const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  dt.setUTCDate(dt.getUTCDate() + 4 - (dt.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(dt.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((dt - yearStart) / 86400000 + 1) / 7);
+  return `${dt.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
+}
 
 const BASE = process.env.BASE_URL || "https://livestock-eight.vercel.app";
 const SHOT_DIR = process.env.SHOT_DIR || "/tmp/ops-shots";
@@ -166,6 +175,20 @@ if (db) {
     status, finished_at: finishedAt, summary: report.split("\n").find((l) => l.includes("Result:")) ?? "done",
     stats: { checksRun, findings: findings.length, worst },
   }).eq("id", runId);
+
+  // Learning loop: recurring failures become reinforced bug_pattern lessons;
+  // log the decision + performance metrics for self-scoring.
+  for (const f of findings.filter((x) => x.severity === "high" || x.severity === "critical" || x.area === "auction")) {
+    await recordLesson(db, { agent: "ops", category: "bug_pattern", lesson: f.title, tags: [f.area] });
+  }
+  await recordDecision(db, {
+    runId, agent: "ops",
+    action: `Ran ${checksRun} checks; ${findings.length} finding(s)`,
+    riskLevel: worst === "critical" || worst === "high" ? "medium" : "low",
+  });
+  const period = isoWeek();
+  await recordMetric(db, { agent: "ops", period, metric: "checks_run", value: checksRun });
+  await recordMetric(db, { agent: "ops", period, metric: "findings", value: findings.length });
 }
 await sendReportEmail(`OpenRange Ops QA — ${findings.length} finding(s)`, report);
 

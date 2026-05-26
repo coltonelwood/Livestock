@@ -1,0 +1,29 @@
+name: weekly-improvement
+# Weekly agent self-improvement report: aggregates the week's runs/findings/
+# feedback/approvals into a report + self-scores. Pure aggregation, no LLM, no
+# fabrication. No-ops without Supabase secrets.
+on:
+  schedule:
+    - cron: "0 18 * * 1" # Mondays 18:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Generate improvement report
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          OPS_REPORT_EMAIL: ${{ vars.OPS_REPORT_EMAIL }}
+        run: node agents/improve/run.mjs

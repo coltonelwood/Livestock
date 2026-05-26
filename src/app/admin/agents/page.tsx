@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
+
 import { createClient } from "@/lib/supabase/server";
 import { AGENTS, agentLabel } from "@/lib/agents/registry";
 import { SAFETY_RULES } from "@/lib/agents/safety";
@@ -12,6 +14,7 @@ import {
   setContentStatusAction,
   setFindingStatusAction,
 } from "@/modules/admin/agent-actions";
+import { recordFeedbackAction } from "@/modules/admin/memory-actions";
 
 export const metadata: Metadata = { title: "Admin · Agent Control Center" };
 export const dynamic = "force-dynamic";
@@ -45,9 +48,12 @@ export default async function AgentControlCenterPage() {
             Supervised AI operations team. Agents propose; nothing risky happens without your approval.
           </p>
         </div>
-        <Badge variant={pendingCount ? "warning" : "secondary"}>
-          {pendingCount} awaiting approval
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant={pendingCount ? "warning" : "secondary"}>
+            {pendingCount} awaiting approval
+          </Badge>
+          <Button asChild variant="outline" size="sm"><Link href="/admin/agents/memory">Memory &amp; Learning →</Link></Button>
+        </div>
       </div>
 
       {/* Agents */}
@@ -152,12 +158,24 @@ export default async function AgentControlCenterPage() {
           </p>
         )}
         {runRows.map((r) => (
-          <Card key={r.id} className="flex items-center justify-between gap-3 p-3 text-sm">
+          <Card key={r.id} className="flex flex-wrap items-center gap-3 p-3 text-sm">
             <span><span className="font-medium">{agentLabel(r.agent)}</span> · {r.trigger}</span>
-            <span className="text-muted-foreground">{r.summary ?? ""}</span>
+            <span className="min-w-0 flex-1 truncate text-muted-foreground">{r.summary ?? ""}</span>
             <Badge variant={r.status === "success" ? "success" : r.status === "failed" ? "destructive" : "outline"}>
               {r.status}
             </Badge>
+            {/* "Was this useful?" — feedback feeds future retrieval ranking. */}
+            <span className="text-xs text-muted-foreground">Useful?</span>
+            <form action={recordFeedbackAction}>
+              <input type="hidden" name="target_type" value="run" /><input type="hidden" name="target_id" value={r.id} />
+              <input type="hidden" name="agent" value={r.agent} /><input type="hidden" name="rating" value="useful" />
+              <Button type="submit" size="sm" variant="ghost" className="h-7 px-2">👍</Button>
+            </form>
+            <form action={recordFeedbackAction}>
+              <input type="hidden" name="target_type" value="run" /><input type="hidden" name="target_id" value={r.id} />
+              <input type="hidden" name="agent" value={r.agent} /><input type="hidden" name="rating" value="not_useful" />
+              <Button type="submit" size="sm" variant="ghost" className="h-7 px-2">👎</Button>
+            </form>
             <span className="shrink-0 text-xs text-muted-foreground">{fmt(r.started_at)}</span>
           </Card>
         ))}
