@@ -9,6 +9,7 @@ import {
   rankMemories,
   selectForContext,
   buildPromptContext,
+  isPausedFromPrefs,
 } from "../../../agents/lib/memory-core.mjs";
 
 const now = Date.UTC(2026, 4, 26);
@@ -37,6 +38,20 @@ describe("memory scoping (no cross-org leakage)", () => {
     const m = mem({ scope: "user", user_id: "u1" });
     expect(scopeVisible(m, { userId: "u1" })).toBe(true);
     expect(scopeVisible(m, { userId: "u2" })).toBe(false);
+  });
+});
+
+describe("agent pause switch", () => {
+  it("pauses a single agent and global-all, not others", () => {
+    const prefs = [
+      { agent: "growth", key: "paused", value: "true" },
+      { agent: "ops", key: "paused", value: "false" },
+    ];
+    expect(isPausedFromPrefs(prefs, "growth")).toBe(true);
+    expect(isPausedFromPrefs(prefs, "ops")).toBe(false);
+    expect(isPausedFromPrefs(prefs, "content")).toBe(false);
+    expect(isPausedFromPrefs([{ key: "paused:all", value: "true" }], "content")).toBe(true);
+    expect(isPausedFromPrefs([], "ops")).toBe(false);
   });
 });
 

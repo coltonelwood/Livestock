@@ -21,6 +21,17 @@ export function looksLikeSecret(text) {
   return SECRET_PATTERNS.some((re) => re.test(String(text)));
 }
 
+/** Is an agent paused? Reads agent_preferences rows: a global {key:'paused:all'}
+ * pauses everything; {agent, key:'paused', value:'true'} pauses one agent. */
+export function isPausedFromPrefs(prefs, agent) {
+  if (!Array.isArray(prefs)) return false;
+  return prefs.some(
+    (p) =>
+      (p.key === "paused:all" && String(p.value) === "true") ||
+      (p.agent === agent && p.key === "paused" && String(p.value) === "true"),
+  );
+}
+
 /** Replace anything that looks like a credential with a marker. */
 export function redactSecrets(text) {
   if (!text) return text;

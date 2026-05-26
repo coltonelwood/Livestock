@@ -20,7 +20,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { adminClient } from "../lib/supabase.mjs";
 import { targetFor, parseItems, prepareRows } from "../lib/agent-io.mjs";
-import { retrieveMemories, recordDecision, touchMemories, loadPlaybook } from "../lib/memory.mjs";
+import { retrieveMemories, recordDecision, touchMemories, loadPlaybook, isAgentPaused } from "../lib/memory.mjs";
 import { buildPromptContext } from "../lib/memory-core.mjs";
 
 const PLAYBOOK_FOR = {
@@ -46,6 +46,8 @@ const finish = async (status, summary, stats = {}) => {
   console.log(`[${agent}] ${status}: ${summary}`);
   if (db && runId) await db.from("agent_runs").update({ status, summary, stats, finished_at: new Date().toISOString() }).eq("id", runId);
 };
+
+if (await isAgentPaused(db, agent)) { await finish("partial", "paused by admin"); process.exit(0); }
 
 const apiKey = process.env.ANTHROPIC_API_KEY;
 if (!apiKey) { await finish("partial", "skipped: ANTHROPIC_API_KEY not set"); process.exit(0); }

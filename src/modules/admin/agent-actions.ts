@@ -75,3 +75,21 @@ export async function setModerationStatusAction(formData: FormData) {
   await supabase.from("moderation_queue").update({ status: status as "approved_action" | "dismissed" }).eq("id", id);
   revalidatePath(PATH);
 }
+
+/** Pause/resume an agent. A paused agent records a run and exits without acting,
+ * giving the admin a hard kill-switch for the 24/7 system. */
+export async function setAgentPausedAction(formData: FormData) {
+  const uid = await adminId();
+  const agent = String(formData.get("agent") ?? "");
+  const paused = String(formData.get("paused") ?? "");
+  if (!agent || !["true", "false"].includes(paused)) return;
+  const supabase = await createClient();
+  const { data: existing } = await supabase
+    .from("agent_preferences").select("id").eq("agent", agent).eq("key", "paused").maybeSingle();
+  if (existing) {
+    await supabase.from("agent_preferences").update({ value: paused }).eq("id", existing.id);
+  } else {
+    await supabase.from("agent_preferences").insert({ scope: "agent", agent, key: "paused", value: paused, created_by: uid });
+  }
+  revalidatePath(PATH);
+}

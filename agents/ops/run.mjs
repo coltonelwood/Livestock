@@ -18,7 +18,7 @@ import fs from "node:fs";
 import { chromium } from "playwright";
 import { routeFinding, overflowFinding, linkFinding, renderReport, worstSeverity } from "../lib/checks.mjs";
 import { adminClient, sendReportEmail } from "../lib/supabase.mjs";
-import { recordLesson, recordDecision, recordMetric } from "../lib/memory.mjs";
+import { recordLesson, recordDecision, recordMetric, isAgentPaused } from "../lib/memory.mjs";
 
 function isoWeek(d = new Date()) {
   const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -48,6 +48,13 @@ if (db) {
     .insert({ agent: "ops", trigger: process.env.AGENT_TRIGGER || "schedule", status: "running" })
     .select("id").single();
   runId = data?.id ?? null;
+}
+
+// Admin pause switch — stop cleanly without acting.
+if (await isAgentPaused(db, "ops")) {
+  if (runId) await db.from("agent_runs").update({ status: "partial", summary: "paused by admin", finished_at: new Date().toISOString() }).eq("id", runId);
+  console.log("ops agent is paused by admin — exiting.");
+  process.exit(0);
 }
 
 const browser = await chromium.launch();

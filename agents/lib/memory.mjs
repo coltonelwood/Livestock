@@ -1,6 +1,14 @@
 // Memory I/O for agent scripts. Thin layer over Supabase that delegates all
 // filtering/scoping/ranking to memory-core, and refuses to persist secrets.
-import { looksLikeSecret, redactSecrets, selectForContext } from "./memory-core.mjs";
+import { looksLikeSecret, redactSecrets, selectForContext, isPausedFromPrefs } from "./memory-core.mjs";
+
+/** Admin "pause" switch (Control Center). A paused agent records a run and exits
+ * without acting. Returns false when there's no DB (local dev / no env). */
+export async function isAgentPaused(db, agent) {
+  if (!db) return false;
+  const { data } = await db.from("agent_preferences").select("agent, key, value").in("key", ["paused", "paused:all"]);
+  return isPausedFromPrefs(data ?? [], agent);
+}
 
 /**
  * Retrieve + rank the memories an agent should see for a run.

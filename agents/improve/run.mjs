@@ -5,6 +5,7 @@
  * summary to analytics_reports and self-scores to agent_performance_metrics.
  */
 import { adminClient, sendReportEmail } from "../lib/supabase.mjs";
+import { isAgentPaused } from "../lib/memory.mjs";
 import { aggregate, buildImprovementReport } from "../lib/improve-core.mjs";
 
 function isoWeek(d = new Date()) {
@@ -22,6 +23,12 @@ let runId = null;
 if (db) {
   const { data } = await db.from("agent_runs").insert({ agent: "improve", trigger: process.env.AGENT_TRIGGER || "schedule", status: "running" }).select("id").single();
   runId = data?.id ?? null;
+}
+
+if (await isAgentPaused(db, "improve")) {
+  if (runId) await db.from("agent_runs").update({ status: "partial", summary: "paused by admin", finished_at: new Date().toISOString() }).eq("id", runId);
+  console.log("improve agent is paused by admin — exiting.");
+  process.exit(0);
 }
 
 let per = {};

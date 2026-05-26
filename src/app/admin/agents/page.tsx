@@ -13,6 +13,7 @@ import {
   setOutreachStatusAction,
   setContentStatusAction,
   setFindingStatusAction,
+  setAgentPausedAction,
 } from "@/modules/admin/agent-actions";
 import { recordFeedbackAction } from "@/modules/admin/memory-actions";
 
@@ -25,13 +26,15 @@ function fmt(ts: string | null) {
 
 export default async function AgentControlCenterPage() {
   const supabase = await createClient();
-  const [runs, tasks, outreach, content, findings] = await Promise.all([
+  const [runs, tasks, outreach, content, findings, prefs] = await Promise.all([
     supabase.from("agent_runs").select("*").order("started_at", { ascending: false }).limit(20),
     supabase.from("agent_tasks").select("*").eq("status", "proposed").order("created_at", { ascending: false }).limit(50),
     supabase.from("outreach_drafts").select("*").eq("status", "pending_approval").order("created_at", { ascending: false }).limit(50),
     supabase.from("content_drafts").select("*").eq("status", "pending_approval").order("created_at", { ascending: false }).limit(50),
     supabase.from("qa_findings").select("*").eq("status", "open").order("created_at", { ascending: false }).limit(50),
+    supabase.from("agent_preferences").select("agent, value").eq("key", "paused"),
   ]);
+  const pausedAgents = new Set((prefs.data ?? []).filter((p) => String(p.value) === "true").map((p) => p.agent));
   const runRows = runs.data ?? [];
   const latestByAgent = new Map<string, (typeof runRows)[number]>();
   for (const r of runRows) if (!latestByAgent.has(r.agent)) latestByAgent.set(r.agent, r);
@@ -61,17 +64,29 @@ export default async function AgentControlCenterPage() {
       <div className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {AGENTS.map((a) => {
           const last = latestByAgent.get(a.name);
+          const paused = pausedAgents.has(a.name);
           return (
             <Card key={a.name} className="flex flex-col gap-2 p-4">
               <div className="flex items-center justify-between gap-2">
                 <p className="font-medium">{a.label}</p>
-                <Badge variant={a.status === "live" ? "success" : "outline"}>{a.status}</Badge>
+                <div className="flex items-center gap-1.5">
+                  {paused && <Badge variant="destructive">paused</Badge>}
+                  <Badge variant={a.status === "live" ? "success" : "outline"}>{a.status}</Badge>
+                </div>
               </div>
               <p className="text-xs text-muted-foreground">{a.purpose}</p>
-              <p className="mt-auto text-xs text-muted-foreground">
-                Schedule: {a.schedule}
-                {last && ` · last run ${fmt(last.started_at)} (${last.status})`}
-              </p>
+              <div className="mt-auto flex items-center justify-between gap-2">
+                <p className="text-xs text-muted-foreground">
+                  {a.schedule}{last && ` · last ${last.status}`}
+                </p>
+                <form action={setAgentPausedAction}>
+                  <input type="hidden" name="agent" value={a.name} />
+                  <input type="hidden" name="paused" value={paused ? "false" : "true"} />
+                  <Button type="submit" size="sm" variant="ghost" className="h-7 px-2 text-xs">
+                    {paused ? "Resume" : "Pause"}
+                  </Button>
+                </form>
+              </div>
             </Card>
           );
         })}
