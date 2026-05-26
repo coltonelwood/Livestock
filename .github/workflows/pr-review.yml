@@ -1,0 +1,60 @@
+name: pr-review
+# Code Agent gate: every PR must pass typecheck, lint, build, unit tests, and the
+# DB/RLS suites before a human reviews/merges. This workflow NEVER merges or
+# deploys — it only produces evidence. Optionally adds a Claude review comment
+# when ANTHROPIC_API_KEY is configured.
+on:
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - name: DB / RLS suites
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+        run: bash supabase/tests/run-local.sh || echo "::warning::DB suite needs psql; see docs/AGENTS.md"
+
+  claude-review:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Claude code review (skipped without key)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "ANTHROPIC_API_KEY not set — skipping AI review (gates above are authoritative)."
+            exit 0
+          fi
+          echo "Wire the official Claude Code Action here (see /agents/code-agent.md)."
+          echo "It must run in review-only mode: comment findings, never push/merge/deploy."

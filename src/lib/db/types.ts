@@ -425,6 +425,156 @@ export type PlaceOrderResult = {
   organization_id: string;
 };
 
+// ── Supervised agent operations system ──
+export type AgentName =
+  | "ops" | "code" | "growth" | "content" | "ad_creative" | "analytics"
+  | "liquidity" | "seo" | "customer_success" | "revenue" | "trust_safety" | "design_ux";
+
+export type AgentRun = {
+  id: string;
+  agent: string;
+  trigger: string;
+  status: "running" | "success" | "failed" | "partial";
+  summary: string | null;
+  stats: Record<string, unknown>;
+  error: string | null;
+  started_at: string;
+  finished_at: string | null;
+};
+
+export type AgentTask = Timestamps & {
+  id: string;
+  run_id: string | null;
+  agent: string;
+  title: string;
+  detail: string | null;
+  priority: "low" | "normal" | "high" | "urgent";
+  status: "proposed" | "approved" | "rejected" | "in_progress" | "done";
+  payload: Record<string, unknown>;
+  github_issue_url: string | null;
+  github_pr_url: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+};
+
+export type QaFinding = {
+  id: string;
+  run_id: string | null;
+  severity: "info" | "low" | "medium" | "high" | "critical";
+  area: string;
+  route: string | null;
+  title: string;
+  detail: string | null;
+  screenshot_url: string | null;
+  status: "open" | "acknowledged" | "resolved" | "ignored";
+  github_issue_url: string | null;
+  created_at: string;
+};
+
+export type GrowthLead = Timestamps & {
+  id: string;
+  business_name: string;
+  contact_name: string | null;
+  email: string | null;
+  phone: string | null;
+  website: string | null;
+  region: string | null;
+  category: "ranch" | "breeder" | "auction_house" | "beef_seller" | "other";
+  source: string | null;
+  status: "new" | "qualified" | "contacted" | "converted" | "rejected";
+  notes: string | null;
+};
+
+export type OutreachDraft = {
+  id: string;
+  lead_id: string | null;
+  channel: "email" | "sms" | "social_dm" | "mail";
+  subject: string | null;
+  body: string;
+  status: "pending_approval" | "approved" | "rejected" | "sent";
+  approved_by: string | null;
+  approved_at: string | null;
+  sent_at: string | null;
+  created_at: string;
+};
+
+export type ContentDraft = {
+  id: string;
+  platform: "facebook" | "instagram" | "tiktok" | "x" | "youtube" | "email" | "blog";
+  kind: string;
+  title: string | null;
+  body: string;
+  status: "draft" | "pending_approval" | "approved" | "scheduled" | "published" | "rejected";
+  scheduled_for: string | null;
+  created_at: string;
+};
+
+export type AdCampaignDraft = {
+  id: string;
+  platform: "facebook" | "instagram" | "tiktok" | "google" | "youtube";
+  objective: string | null;
+  concept: string;
+  copy: string | null;
+  shot_list: string | null;
+  budget_note: string | null;
+  status: "draft" | "pending_approval" | "approved" | "rejected";
+  created_at: string;
+};
+
+export type AnalyticsReport = {
+  id: string;
+  period: string | null;
+  kind: string;
+  title: string;
+  body: string;
+  metrics: Record<string, unknown>;
+  created_at: string;
+};
+
+export type SeoTask = {
+  id: string;
+  target_type: string;
+  target_id: string | null;
+  title: string;
+  recommendation: string;
+  status: "proposed" | "approved" | "done" | "rejected";
+  created_at: string;
+};
+
+export type ModerationItem = {
+  id: string;
+  entity_type: string;
+  entity_id: string | null;
+  organization_id: string | null;
+  reason: string;
+  severity: "low" | "medium" | "high" | "critical";
+  status: "pending" | "approved_action" | "dismissed";
+  notes: string | null;
+  created_at: string;
+};
+
+export type ChurnRisk = {
+  id: string;
+  organization_id: string | null;
+  risk_level: "low" | "medium" | "high";
+  signals: Record<string, unknown>;
+  recommended_action: string | null;
+  status: "open" | "actioned" | "resolved" | "ignored";
+  created_at: string;
+};
+
+export type OptimizationSuggestion = {
+  id: string;
+  agent: string;
+  area: string;
+  title: string;
+  detail: string | null;
+  expected_impact: string | null;
+  effort: string | null;
+  status: "proposed" | "approved" | "done" | "rejected";
+  created_at: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -466,6 +616,18 @@ export type Database = {
         "order_id" | "organization_id" | "name" | "unit_price_usd" | "quantity" | "line_total_usd"
       >;
       notifications: Def<Notification, "type">;
+      agent_runs: Def<AgentRun, "agent">;
+      agent_tasks: Def<AgentTask, "agent" | "title">;
+      qa_findings: Def<QaFinding, "area" | "title">;
+      growth_leads: Def<GrowthLead, "business_name">;
+      outreach_drafts: Def<OutreachDraft, "body">;
+      content_drafts: Def<ContentDraft, "platform" | "body">;
+      ad_campaign_drafts: Def<AdCampaignDraft, "platform" | "concept">;
+      analytics_reports: Def<AnalyticsReport, "title" | "body">;
+      seo_tasks: Def<SeoTask, "target_type" | "title" | "recommendation">;
+      moderation_queue: Def<ModerationItem, "entity_type" | "reason">;
+      churn_risks: Def<ChurnRisk, "organization_id">;
+      optimization_suggestions: Def<OptimizationSuggestion, "agent" | "area" | "title">;
     };
     Views: { [_ in never]: never };
     Functions: {

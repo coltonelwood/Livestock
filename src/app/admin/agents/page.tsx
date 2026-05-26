@@ -1,0 +1,203 @@
+import type { Metadata } from "next";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { createClient } from "@/lib/supabase/server";
+import { AGENTS, agentLabel } from "@/lib/agents/registry";
+import { SAFETY_RULES } from "@/lib/agents/safety";
+import {
+  setTaskStatusAction,
+  setOutreachStatusAction,
+  setContentStatusAction,
+  setFindingStatusAction,
+} from "@/modules/admin/agent-actions";
+
+export const metadata: Metadata = { title: "Admin · Agent Control Center" };
+export const dynamic = "force-dynamic";
+
+function fmt(ts: string | null) {
+  return ts ? new Date(ts).toLocaleString() : "—";
+}
+
+export default async function AgentControlCenterPage() {
+  const supabase = await createClient();
+  const [runs, tasks, outreach, content, findings] = await Promise.all([
+    supabase.from("agent_runs").select("*").order("started_at", { ascending: false }).limit(20),
+    supabase.from("agent_tasks").select("*").eq("status", "proposed").order("created_at", { ascending: false }).limit(50),
+    supabase.from("outreach_drafts").select("*").eq("status", "pending_approval").order("created_at", { ascending: false }).limit(50),
+    supabase.from("content_drafts").select("*").eq("status", "pending_approval").order("created_at", { ascending: false }).limit(50),
+    supabase.from("qa_findings").select("*").eq("status", "open").order("created_at", { ascending: false }).limit(50),
+  ]);
+  const runRows = runs.data ?? [];
+  const latestByAgent = new Map<string, (typeof runRows)[number]>();
+  for (const r of runRows) if (!latestByAgent.has(r.agent)) latestByAgent.set(r.agent, r);
+
+  const pendingCount =
+    (tasks.data?.length ?? 0) + (outreach.data?.length ?? 0) + (content.data?.length ?? 0);
+
+  return (
+    <>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Agent Control Center</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Supervised AI operations team. Agents propose; nothing risky happens without your approval.
+          </p>
+        </div>
+        <Badge variant={pendingCount ? "warning" : "secondary"}>
+          {pendingCount} awaiting approval
+        </Badge>
+      </div>
+
+      {/* Agents */}
+      <h2 className="mb-3 text-sm font-semibold text-muted-foreground">Agents</h2>
+      <div className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {AGENTS.map((a) => {
+          const last = latestByAgent.get(a.name);
+          return (
+            <Card key={a.name} className="flex flex-col gap-2 p-4">
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-medium">{a.label}</p>
+                <Badge variant={a.status === "live" ? "success" : "outline"}>{a.status}</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">{a.purpose}</p>
+              <p className="mt-auto text-xs text-muted-foreground">
+                Schedule: {a.schedule}
+                {last && ` · last run ${fmt(last.started_at)} (${last.status})`}
+              </p>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Approvals queue */}
+      <h2 className="mb-3 text-sm font-semibold text-muted-foreground">Approvals queue</h2>
+      <div className="mb-8 space-y-3">
+        {pendingCount === 0 && (
+          <p className="text-sm text-muted-foreground">Nothing waiting on you. 🤠</p>
+        )}
+
+        {(tasks.data ?? []).map((t) => (
+          <Card key={t.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="font-medium">{t.title}</p>
+              <p className="text-sm text-muted-foreground">
+                {agentLabel(t.agent)} task · {t.priority}{t.detail ? ` — ${t.detail}` : ""}
+              </p>
+            </div>
+            <div className="flex shrink-0 gap-2">
+              <ApproveForm action={setTaskStatusAction} id={t.id} value="approved" label="Approve" />
+              <ApproveForm action={setTaskStatusAction} id={t.id} value="rejected" label="Reject" variant="ghost" />
+            </div>
+          </Card>
+        ))}
+
+        {(outreach.data ?? []).map((o) => (
+          <Card key={o.id} className="flex flex-col gap-3 p-4">
+            <Badge variant="secondary" className="w-fit">Outreach · {o.channel}</Badge>
+            {o.subject && <p className="font-medium">{o.subject}</p>}
+            <p className="whitespace-pre-wrap text-sm text-muted-foreground">{o.body}</p>
+            <div className="flex gap-2">
+              <ApproveForm action={setOutreachStatusAction} id={o.id} value="approved" label="Approve (won't auto-send)" />
+              <ApproveForm action={setOutreachStatusAction} id={o.id} value="rejected" label="Reject" variant="ghost" />
+            </div>
+          </Card>
+        ))}
+
+        {(content.data ?? []).map((c) => (
+          <Card key={c.id} className="flex flex-col gap-3 p-4">
+            <Badge variant="secondary" className="w-fit">Content · {c.platform} · {c.kind}</Badge>
+            {c.title && <p className="font-medium">{c.title}</p>}
+            <p className="whitespace-pre-wrap text-sm text-muted-foreground">{c.body}</p>
+            <div className="flex gap-2">
+              <ApproveForm action={setContentStatusAction} id={c.id} value="approved" label="Approve" />
+              <ApproveForm action={setContentStatusAction} id={c.id} value="rejected" label="Reject" variant="ghost" />
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Open QA findings */}
+      <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
+        Open QA findings ({findings.data?.length ?? 0})
+      </h2>
+      <div className="mb-8 grid gap-2">
+        {(findings.data ?? []).length === 0 && (
+          <p className="text-sm text-muted-foreground">No open findings.</p>
+        )}
+        {(findings.data ?? []).map((f) => (
+          <Card key={f.id} className="flex flex-col gap-2 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <Badge variant={f.severity === "critical" || f.severity === "high" ? "destructive" : "outline"}>
+                {f.severity}
+              </Badge>
+              <span className="ml-2 font-medium">{f.title}</span>
+              <span className="ml-1 text-muted-foreground">{f.route ?? ""}</span>
+            </div>
+            <div className="flex shrink-0 gap-2">
+              <ApproveForm action={setFindingStatusAction} id={f.id} value="resolved" label="Resolve" />
+              <ApproveForm action={setFindingStatusAction} id={f.id} value="ignored" label="Ignore" variant="ghost" />
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Recent runs */}
+      <h2 className="mb-3 text-sm font-semibold text-muted-foreground">Recent runs</h2>
+      <div className="mb-8 grid gap-1.5">
+        {runRows.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            No runs recorded yet. Runs appear here once the scheduled workflows execute (see /agents).
+          </p>
+        )}
+        {runRows.map((r) => (
+          <Card key={r.id} className="flex items-center justify-between gap-3 p-3 text-sm">
+            <span><span className="font-medium">{agentLabel(r.agent)}</span> · {r.trigger}</span>
+            <span className="text-muted-foreground">{r.summary ?? ""}</span>
+            <Badge variant={r.status === "success" ? "success" : r.status === "failed" ? "destructive" : "outline"}>
+              {r.status}
+            </Badge>
+            <span className="shrink-0 text-xs text-muted-foreground">{fmt(r.started_at)}</span>
+          </Card>
+        ))}
+      </div>
+
+      {/* Safety */}
+      <Card className="border-accent/30 bg-accent/5">
+        <CardHeader>
+          <CardTitle className="text-base">Safety guarantees</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="grid gap-1.5 text-sm text-muted-foreground sm:grid-cols-2">
+            {SAFETY_RULES.map((rule) => (
+              <li key={rule} className="flex gap-2"><span className="text-primary">✓</span>{rule}</li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+    </>
+  );
+}
+
+function ApproveForm({
+  action,
+  id,
+  value,
+  label,
+  variant = "outline",
+}: {
+  action: (formData: FormData) => Promise<void>;
+  id: string;
+  value: string;
+  label: string;
+  variant?: "outline" | "ghost";
+}) {
+  return (
+    <form action={action}>
+      <input type="hidden" name="id" value={id} />
+      <input type="hidden" name="status" value={value} />
+      <Button type="submit" size="sm" variant={variant}>{label}</Button>
+    </form>
+  );
+}

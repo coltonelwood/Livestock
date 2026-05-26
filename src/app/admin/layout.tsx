@@ -5,6 +5,7 @@ import { requirePlatformAdmin } from "@/lib/auth/session";
 
 const adminNav = [
   { title: "Overview", href: "/admin" },
+  { title: "Agents", href: "/admin/agents" },
   { title: "Organizations", href: "/admin/organizations" },
   { title: "Users", href: "/admin/users" },
   { title: "Listings", href: "/admin/listings" },

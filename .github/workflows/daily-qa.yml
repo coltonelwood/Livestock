@@ -1,0 +1,40 @@
+name: daily-qa
+# Ops Agent — full browser QA of the deployed site. Read-only. Writes findings
+# to Supabase (if secrets set) and uploads failure screenshots as an artifact.
+on:
+  schedule:
+    - cron: "0 13 * * *" # 13:00 UTC daily
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run Ops Agent
+        env:
+          BASE_URL: ${{ vars.BASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          OPS_REPORT_EMAIL: ${{ vars.OPS_REPORT_EMAIL }}
+          SHOT_DIR: ${{ github.workspace }}/ops-shots
+          AGENT_TRIGGER: schedule
+        run: node agents/ops/run.mjs
+      - name: Upload failure screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ops-screenshots
+          path: ops-shots/
+          if-no-files-found: ignore
+          retention-days: 14

@@ -1,0 +1,31 @@
+name: hourly-health-check
+# Lightweight uptime/health ping (no browser). Fails the job — and thus alerts
+# via GitHub notifications — if a key public route or the chat endpoint is down.
+on:
+  schedule:
+    - cron: "17 * * * *" # hourly
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe public routes
+        env:
+          BASE_URL: ${{ vars.BASE_URL }}
+        run: |
+          BASE="${BASE_URL:-https://livestock-eight.vercel.app}"
+          fail=0
+          for r in "/" "/listings" "/beef" "/auctions" "/pricing" "/login"; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 25 "$BASE$r")
+            echo "$r -> $code"
+            [ "$code" = "200" ] || { echo "::error::$r returned $code"; fail=1; }
+          done
+          # Auth-gated dashboard must redirect, not 500.
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 25 "$BASE/dashboard")
+          echo "/dashboard -> $code"
+          case "$code" in 200|3??) ;; *) echo "::error::/dashboard returned $code"; fail=1;; esac
+          exit $fail
