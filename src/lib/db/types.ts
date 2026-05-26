@@ -489,6 +489,7 @@ export type GrowthLead = Timestamps & {
 export type OutreachDraft = {
   id: string;
   lead_id: string | null;
+  prospect_id: string | null;
   channel: "email" | "sms" | "social_dm" | "mail";
   subject: string | null;
   body: string;
@@ -496,6 +497,63 @@ export type OutreachDraft = {
   approved_by: string | null;
   approved_at: string | null;
   sent_at: string | null;
+  created_at: string;
+};
+
+export type ProspectStage =
+  | "discovered" | "reviewed" | "approved" | "contacted"
+  | "responded" | "onboarding" | "active" | "inactive";
+
+export type FoundingProspect = Timestamps & {
+  id: string;
+  business_name: string;
+  contact_name: string | null;
+  email: string | null;
+  phone: string | null;
+  website: string | null;
+  social_url: string | null;
+  state: string | null;
+  county: string | null;
+  category: "ranch" | "breeder" | "beef_seller" | "auction_house" | "other";
+  what_they_sell: string | null;
+  sells_cattle: boolean;
+  sells_beef: boolean;
+  weak_website: boolean;
+  active_social: boolean;
+  uses_messenger: boolean;
+  runs_auctions: boolean;
+  good_photos: boolean;
+  owner_operated: boolean;
+  fit_score: number;
+  score_breakdown: Record<string, number>;
+  stage: ProspectStage;
+  tags: string[];
+  notes: string | null;
+  source: string | null;
+  source_url: string | null;
+  referred_by: string | null;
+  organization_id: string | null;
+  dedupe_key: string | null;
+  created_by: string | null;
+  last_contacted_at: string | null;
+};
+
+export type ProspectReferrer = {
+  id: string;
+  name: string;
+  type: "rancher" | "auction" | "beef_buyer" | "partner" | "other";
+  contact: string | null;
+  reward_note: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type ProspectEvent = {
+  id: string;
+  prospect_id: string;
+  event_type: string;
+  detail: string | null;
+  created_by: string | null;
   created_at: string;
 };
 
@@ -777,6 +835,9 @@ export type Database = {
       agent_preferences: Def<AgentPreference, "key" | "value">;
       agent_knowledge_sources: Def<AgentKnowledgeSource, "name">;
       agent_performance_metrics: Def<AgentPerformanceMetric, "agent" | "metric">;
+      founding_prospects: Def<FoundingProspect, "business_name">;
+      prospect_referrers: Def<ProspectReferrer, "name">;
+      prospect_events: Def<ProspectEvent, "prospect_id" | "event_type">;
     };
     Views: { [_ in never]: never };
     Functions: {
