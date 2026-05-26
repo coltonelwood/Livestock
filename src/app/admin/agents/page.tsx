@@ -56,6 +56,7 @@ export default async function AgentControlCenterPage() {
             {pendingCount} awaiting approval
           </Badge>
           <Button asChild variant="outline" size="sm"><Link href="/admin/agents/prospects">Founding Pipeline →</Link></Button>
+          <Button asChild variant="outline" size="sm"><Link href="/admin/agents/outreach">Outreach Ops →</Link></Button>
           <Button asChild variant="outline" size="sm"><Link href="/admin/agents/memory">Memory &amp; Learning →</Link></Button>
         </div>
       </div>

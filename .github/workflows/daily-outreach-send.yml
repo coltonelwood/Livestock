@@ -1,0 +1,31 @@
+name: daily-outreach-send
+# Tier-2 sender. DOES NOTHING unless the agent is armed in Control Center AND a
+# compliant email provider (RESEND_API_KEY) is configured. Even then it only
+# sends human-approved messages that pass the send-safety gate, up to the daily
+# cap. Suppression + cooldown + spam-risk are always enforced.
+on:
+  schedule:
+    - cron: "0 16 * * *" # 16:00 UTC daily
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Run gated sender
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          OUTREACH_FROM: ${{ vars.OUTREACH_FROM }}
+          AGENT_TRIGGER: schedule
+        run: node agents/outreach/send.mjs growth

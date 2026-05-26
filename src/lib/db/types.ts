@@ -557,6 +557,56 @@ export type ProspectEvent = {
   created_at: string;
 };
 
+export type AgentAutonomy = {
+  agent: string;
+  tier: number;
+  outreach_armed: boolean;
+  daily_send_cap: number;
+  cooldown_days: number;
+  updated_by: string | null;
+  updated_at: string;
+};
+
+export type OutboundMessage = Timestamps & {
+  id: string;
+  prospect_id: string | null;
+  agent: string;
+  channel: "email" | "contact_form" | "sms";
+  to_contact: string | null;
+  subject: string | null;
+  body: string;
+  status: "held" | "approved" | "queued" | "sent" | "failed" | "suppressed" | "cancelled";
+  spam_risk: number;
+  risk_reasons: string[];
+  hold_reason: string | null;
+  scheduled_for: string | null;
+  sent_at: string | null;
+  provider_message_id: string | null;
+  error: string | null;
+  created_by: string | null;
+  approved_by: string | null;
+};
+
+export type SuppressionEntry = {
+  id: string;
+  contact: string;
+  reason: "opt_out" | "bounce" | "complaint" | "manual" | "hard_block";
+  notes: string | null;
+  created_at: string;
+};
+
+export type InboundReply = {
+  id: string;
+  prospect_id: string | null;
+  from_contact: string | null;
+  subject: string | null;
+  body: string;
+  classification: string | null;
+  confidence: number | null;
+  handled: boolean;
+  created_at: string;
+};
+
 export type ContentDraft = {
   id: string;
   platform: "facebook" | "instagram" | "tiktok" | "x" | "youtube" | "email" | "blog";
@@ -838,6 +888,10 @@ export type Database = {
       founding_prospects: Def<FoundingProspect, "business_name">;
       prospect_referrers: Def<ProspectReferrer, "name">;
       prospect_events: Def<ProspectEvent, "prospect_id" | "event_type">;
+      agent_autonomy: Def<AgentAutonomy, "agent">;
+      outbound_messages: Def<OutboundMessage, "body">;
+      suppression_list: Def<SuppressionEntry, "contact">;
+      inbound_replies: Def<InboundReply, "body">;
     };
     Views: { [_ in never]: never };
     Functions: {
