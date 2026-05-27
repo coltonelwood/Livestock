@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 
 import { createClient } from "@/lib/supabase/server";
+import { cn } from "@/lib/utils";
 import { AGENTS, agentLabel } from "@/lib/agents/registry";
 import { SAFETY_RULES } from "@/lib/agents/safety";
 import {
@@ -14,8 +15,15 @@ import {
   setContentStatusAction,
   setFindingStatusAction,
   setAgentPausedAction,
+  setSystemPausedAction,
 } from "@/modules/admin/agent-actions";
 import { recordFeedbackAction } from "@/modules/admin/memory-actions";
+import { overallLiquidity, buildLiquidityMap } from "../../../../agents/lib/metrics-core.mjs";
+
+const parseState = (loc: string | null) => {
+  const tail = String(loc ?? "").split(",").pop()?.trim().toUpperCase() ?? "";
+  return /^[A-Z]{2}$/.test(tail) ? tail : "??";
+};
 
 export const metadata: Metadata = { title: "Admin · Agent Control Center" };
 export const dynamic = "force-dynamic";
@@ -26,15 +34,48 @@ function fmt(ts: string | null) {
 
 export default async function AgentControlCenterPage() {
   const supabase = await createClient();
-  const [runs, tasks, outreach, content, findings, prefs] = await Promise.all([
+  const head = { count: "exact" as const, head: true };
+  const [runs, tasks, outreach, content, findings, prefs, sysPref,
+    storefronts, listings, products, auctions, leads, paidOrders, prospects, outboundSent,
+    listingLocs, ranchLocs] = await Promise.all([
     supabase.from("agent_runs").select("*").order("started_at", { ascending: false }).limit(20),
     supabase.from("agent_tasks").select("*").eq("status", "proposed").order("created_at", { ascending: false }).limit(50),
     supabase.from("outreach_drafts").select("*").eq("status", "pending_approval").order("created_at", { ascending: false }).limit(50),
     supabase.from("content_drafts").select("*").eq("status", "pending_approval").order("created_at", { ascending: false }).limit(50),
     supabase.from("qa_findings").select("*").eq("status", "open").order("created_at", { ascending: false }).limit(50),
     supabase.from("agent_preferences").select("agent, value").eq("key", "paused"),
+    supabase.from("agent_preferences").select("value").eq("key", "paused:all").maybeSingle(),
+    supabase.from("ranch_profiles").select("id", head).eq("is_public", true),
+    supabase.from("livestock_listings").select("id", head).eq("status", "active"),
+    supabase.from("meat_products").select("id", head).eq("status", "active"),
+    supabase.from("auctions").select("id", head).in("status", ["live", "scheduled"]),
+    supabase.from("leads").select("id", head),
+    supabase.from("orders").select("id", head).eq("status", "paid"),
+    supabase.from("founding_prospects").select("id", head),
+    supabase.from("outbound_messages").select("id", head).eq("status", "sent"),
+    supabase.from("livestock_listings").select("location").eq("status", "active").limit(1000),
+    supabase.from("ranch_profiles").select("location").eq("is_public", true).limit(500),
   ]);
   const pausedAgents = new Set((prefs.data ?? []).filter((p) => String(p.value) === "true").map((p) => p.agent));
+  const systemPaused = String(sysPref.data?.value ?? "") === "true";
+
+  const totals = { storefronts: storefronts.count ?? 0, listings: listings.count ?? 0, products: products.count ?? 0, auctions: auctions.count ?? 0 };
+  const liquidity = overallLiquidity(totals);
+  const kpis = [
+    { label: "Storefronts", value: totals.storefronts }, { label: "Listings", value: totals.listings },
+    { label: "Beef products", value: totals.products }, { label: "Auctions", value: totals.auctions },
+    { label: "Leads", value: leads.count ?? 0 }, { label: "Paid orders", value: paidOrders.count ?? 0 },
+    { label: "Prospects", value: prospects.count ?? 0 }, { label: "Outreach sent", value: outboundSent.count ?? 0 },
+  ];
+  const regionRows = [
+    ...(listingLocs.data ?? []).map((l) => ({ region: parseState(l.location), listings: 1 })),
+    ...(ranchLocs.data ?? []).map((r) => ({ region: parseState(r.location), storefronts: 1 })),
+  ];
+  const heat = buildLiquidityMap(regionRows);
+  const statusColor: Record<string, string> = {
+    "priority-gap": "bg-destructive/15 text-destructive", empty: "bg-secondary text-muted-foreground",
+    thin: "bg-amber-100 text-amber-800", building: "bg-emerald-50 text-emerald-700", healthy: "bg-emerald-100 text-emerald-800",
+  };
   const runRows = runs.data ?? [];
   const latestByAgent = new Map<string, (typeof runRows)[number]>();
   for (const r of runRows) if (!latestByAgent.has(r.agent)) latestByAgent.set(r.agent, r);
@@ -59,6 +100,51 @@ export default async function AgentControlCenterPage() {
           <Button asChild variant="outline" size="sm"><Link href="/admin/agents/outreach">Outreach Ops →</Link></Button>
           <Button asChild variant="outline" size="sm"><Link href="/admin/agents/memory">Memory &amp; Learning →</Link></Button>
         </div>
+      </div>
+
+      {/* System kill-switch */}
+      <Card className={systemPaused ? "mb-6 border-destructive bg-destructive/10" : "mb-6"}>
+        <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+          <div>
+            <p className="font-medium">{systemPaused ? "🛑 System PAUSED — all agents idle" : "System active"}</p>
+            <p className="text-xs text-muted-foreground">One switch stops/starts every agent across the stack.</p>
+          </div>
+          <form action={setSystemPausedAction}>
+            <input type="hidden" name="paused" value={systemPaused ? "false" : "true"} />
+            <Button type="submit" size="sm" variant={systemPaused ? "outline" : "destructive"}>
+              {systemPaused ? "Resume all agents" : "Pause all agents"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Marketplace KPIs */}
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-muted-foreground">Marketplace</h2>
+        <Badge variant={liquidity.score >= 60 ? "success" : liquidity.score >= 30 ? "warning" : "outline"}>
+          liquidity {liquidity.score}/100
+        </Badge>
+      </div>
+      <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
+        {kpis.map((k) => (
+          <Card key={k.label} className="p-3 text-center">
+            <p className="text-2xl font-bold">{k.value}</p>
+            <p className="text-xs text-muted-foreground">{k.label}</p>
+          </Card>
+        ))}
+      </div>
+      <p className="mb-6 text-xs text-muted-foreground">
+        Gaps to MVP supply: +{liquidity.breakdown.storefronts.gap} storefronts · +{liquidity.breakdown.listings.gap} listings · +{liquidity.breakdown.products.gap} beef · +{liquidity.breakdown.auctions.gap} auctions. All figures are live DB counts.
+      </p>
+
+      {/* Liquidity heatmap */}
+      <h2 className="mb-3 text-sm font-semibold text-muted-foreground">Liquidity heatmap (by region)</h2>
+      <div className="mb-8 flex flex-wrap gap-2">
+        {heat.map((r) => (
+          <span key={r.region} className={cn("rounded-md px-2.5 py-1.5 text-xs font-medium", statusColor[r.status] ?? "bg-secondary")}>
+            {r.region} · {r.density} <span className="opacity-70">({r.status})</span>
+          </span>
+        ))}
       </div>
 
       {/* Agents */}

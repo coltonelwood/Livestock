@@ -76,8 +76,22 @@ export async function setModerationStatusAction(formData: FormData) {
   revalidatePath(PATH);
 }
 
-/** Pause/resume an agent. A paused agent records a run and exits without acting,
- * giving the admin a hard kill-switch for the 24/7 system. */
+/** System-wide kill-switch. Sets the global `paused:all` preference that every
+ * agent honors (isPausedFromPrefs) — one toggle stops the whole stack. */
+export async function setSystemPausedAction(formData: FormData) {
+  const uid = await adminId();
+  const paused = String(formData.get("paused") ?? "");
+  if (!["true", "false"].includes(paused)) return;
+  const supabase = await createClient();
+  const { data: existing } = await supabase
+    .from("agent_preferences").select("id").eq("key", "paused:all").maybeSingle();
+  if (existing) {
+    await supabase.from("agent_preferences").update({ value: paused }).eq("id", existing.id);
+  } else {
+    await supabase.from("agent_preferences").insert({ scope: "global", key: "paused:all", value: paused, created_by: uid });
+  }
+  revalidatePath("/admin/agents");
+}
 export async function setAgentPausedAction(formData: FormData) {
   const uid = await adminId();
   const agent = String(formData.get("agent") ?? "");

@@ -1,0 +1,27 @@
+name: daily-liquidity
+# Liquidity Commander: real marketplace KPI + heatmap snapshot → analytics_reports
+# + seller-acquisition priorities. Pure counts, no fabrication. No-ops without DB.
+on:
+  schedule:
+    - cron: "0 12 * * *" # 12:00 UTC daily
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Marketplace intelligence snapshot
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AGENT_TRIGGER: schedule
+        run: node agents/metrics/run.mjs
