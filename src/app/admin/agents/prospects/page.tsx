@@ -13,6 +13,7 @@ import { STAGES, stageCounts, TOP_REGIONS } from "@/lib/agents/prospect-score";
 import {
   addProspectAction, importCsvAction, setProspectStageAction,
   deleteProspectAction, addReferrerAction, draftOutreachForProspectAction,
+  discoverProspectAction,
 } from "@/modules/admin/prospect-actions";
 
 export const metadata: Metadata = { title: "Admin · Founding Ranch Pipeline" };
@@ -67,6 +68,20 @@ export default async function FoundingProspectsPage() {
         {rows.length} prospect(s){replyRate != null ? ` · reply rate ${replyRate}%` : ""}{activeRate != null ? ` · responded→active ${activeRate}%` : ""}.
         Conversion is measured on real outcomes — no vanity counts.
       </p>
+
+      {/* Compliant assisted discovery */}
+      <Card className="mb-4">
+        <CardHeader><CardTitle className="text-base">Discover from a public URL</CardTitle></CardHeader>
+        <CardContent>
+          <p className="mb-2 text-xs text-muted-foreground">
+            Paste a ranch&apos;s <strong>own public website</strong> (or a directory page you&apos;re permitted to use). The system fetches it only if robots.txt allows, extracts real on-page contact + signals, scores it, and stages it as <strong>discovered</strong>. No crawling, no scraping prohibited sources, no invented data.
+          </p>
+          <form action={discoverProspectAction} className="flex gap-2">
+            <Input name="url" type="url" placeholder="https://exampleranch.com" className="max-w-md" />
+            <Button type="submit" size="sm">Research &amp; score</Button>
+          </form>
+        </CardContent>
+      </Card>
 
       {/* Import + manual entry */}
       <div className="mb-8 grid gap-4 lg:grid-cols-2">

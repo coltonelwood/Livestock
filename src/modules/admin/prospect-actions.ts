@@ -8,6 +8,7 @@ import {
   scoreProspect, dedupeKey, parseProspectsCsv, splitDuplicates, STAGES,
   type Stage,
 } from "@/lib/agents/prospect-score";
+import { fetchAndExtract } from "../../../agents/lib/discover.mjs";
 
 const PATH = "/admin/agents/prospects";
 async function adminId() {
@@ -81,6 +82,38 @@ export async function importCsvAction(formData: FormData) {
     };
   });
   await supabase.from("founding_prospects").insert(rows);
+  revalidatePath(PATH);
+}
+
+/**
+ * Compliant assisted discovery: fetch ONE operator-chosen public URL (only if
+ * robots.txt allows), extract real on-page contact + signals, score, dedup, and
+ * stage as 'discovered' for review. No crawling, no link-following, no
+ * fabrication, no sending. Blocked/empty results are skipped silently.
+ */
+export async function discoverProspectAction(formData: FormData) {
+  const uid = await adminId();
+  const url = String(formData.get("url") ?? "").trim();
+  if (!url) return;
+  const result = await fetchAndExtract(url);
+  if (!result.candidate || !result.candidate.business_name) { revalidatePath(PATH); return; }
+  const c = result.candidate;
+  const { score, breakdown } = scoreProspect(c);
+  const dk = dedupeKey(c.business_name, c.state);
+  const supabase = await createClient();
+  const { data: dup } = await supabase.from("founding_prospects").select("id").eq("dedupe_key", dk).maybeSingle();
+  if (dup) { revalidatePath(PATH); return; }
+  const { data } = await supabase.from("founding_prospects").insert({
+    business_name: c.business_name, email: c.email ?? null, phone: c.phone ?? null,
+    website: c.website ?? null, social_url: c.social_url ?? null, state: c.state ?? null,
+    category: c.sells_beef ? "beef_seller" : "ranch",
+    sells_cattle: c.sells_cattle, sells_beef: c.sells_beef, weak_website: c.weak_website,
+    active_social: !!c.social_url, uses_messenger: false, runs_auctions: c.runs_auctions,
+    good_photos: c.good_photos, owner_operated: c.owner_operated,
+    fit_score: score, score_breakdown: breakdown, stage: "discovered",
+    source: "public_website", source_url: url, dedupe_key: dk, created_by: uid,
+  }).select("id").single();
+  if (data) await supabase.from("prospect_events").insert({ prospect_id: data.id, event_type: "created", detail: `discovered from ${url} (score ${score})`, created_by: uid });
   revalidatePath(PATH);
 }
 
