@@ -822,6 +822,70 @@ export type AgentPerformanceMetric = {
   created_at: string;
 };
 
+export type DiscoverySourcePolicy = {
+  id: string;
+  source_type: string;
+  terms_url: string | null;
+  requires_robots_check: boolean;
+  allowed_fields: string[];
+  default_rate_limit: number;
+  allow_extractor: boolean;
+  notes: string | null;
+  created_at: string;
+};
+
+export type DiscoverySource = Timestamps & {
+  id: string;
+  name: string;
+  source_type: "google_places" | "yelp" | "directory" | "csv" | "manual";
+  enabled: boolean;
+  approved_by_admin: boolean;
+  allowed_by_terms: boolean;
+  robots_checked: boolean;
+  rate_limit_per_day: number;
+  enrich_via_extractor: boolean;
+  config: Record<string, unknown>;
+  last_run_at: string | null;
+  notes: string | null;
+  created_by: string | null;
+  approved_by: string | null;
+};
+
+export type DiscoveryRun = {
+  id: string;
+  source_id: string | null;
+  query: string | null;
+  region: string | null;
+  status: "running" | "success" | "failed" | "blocked";
+  total_results: number;
+  duplicates_removed: number;
+  staged: number;
+  high_fit: number;
+  rejected: number;
+  error: string | null;
+  started_at: string;
+  finished_at: string | null;
+};
+
+export type DiscoveryResult = {
+  id: string;
+  run_id: string | null;
+  source: string;
+  source_id: string | null;
+  business_name: string | null;
+  website: string | null;
+  phone: string | null;
+  address: string | null;
+  state: string | null;
+  raw: Record<string, unknown>;
+  confidence: number;
+  fit_score: number | null;
+  included: boolean;
+  reason: string | null;
+  prospect_id: string | null;
+  created_at: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -888,6 +952,10 @@ export type Database = {
       founding_prospects: Def<FoundingProspect, "business_name">;
       prospect_referrers: Def<ProspectReferrer, "name">;
       prospect_events: Def<ProspectEvent, "prospect_id" | "event_type">;
+      discovery_source_policies: Def<DiscoverySourcePolicy, "source_type">;
+      discovery_sources: Def<DiscoverySource, "name" | "source_type">;
+      discovery_runs: Def<DiscoveryRun, "source_id">;
+      discovery_results: Def<DiscoveryResult, "source">;
       agent_autonomy: Def<AgentAutonomy, "agent">;
       outbound_messages: Def<OutboundMessage, "body">;
       suppression_list: Def<SuppressionEntry, "contact">;
