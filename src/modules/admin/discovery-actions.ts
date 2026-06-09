@@ -109,7 +109,9 @@ export async function promoteResultAction(formData: FormData) {
   let signals: Record<string, unknown> = { state: r.state, weak_website: !r.website };
   if (r.website && policy?.allow_extractor) {
     const ex = await fetchAndExtract(r.website);
-    if (ex.candidate) signals = { ...ex.candidate };
+    // active_social is derived, not extracted — set it BEFORE scoring so the
+    // stored fit_score matches the stored signal columns.
+    if (ex.candidate) signals = { ...ex.candidate, active_social: !!ex.candidate.social_url };
   }
   const { score, breakdown } = scoreProspect(signals);
   const dk = dedupeKey(r.business_name, (signals.state as string) ?? r.state);
