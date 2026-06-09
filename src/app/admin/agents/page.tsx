@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 
 import { createClient } from "@/lib/supabase/server";
-import { cn } from "@/lib/utils";
+import { cn, formatUtc } from "@/lib/utils";
 import { AGENTS, agentLabel } from "@/lib/agents/registry";
 import { SAFETY_RULES } from "@/lib/agents/safety";
 import {
@@ -28,9 +28,7 @@ const parseState = (loc: string | null) => {
 export const metadata: Metadata = { title: "Admin · Agent Control Center" };
 export const dynamic = "force-dynamic";
 
-function fmt(ts: string | null) {
-  return ts ? new Date(ts).toLocaleString() : "—";
-}
+const fmt = formatUtc;
 
 export default async function AgentControlCenterPage() {
   const supabase = await createClient();

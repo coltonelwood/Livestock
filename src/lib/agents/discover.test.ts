@@ -56,4 +56,36 @@ describe("public-page extraction (no fabrication)", () => {
     const s = extractSignals("<html><body>logo@2x.png banner@3x.png</body></html>", "https://x.com");
     expect(s.email).toBeNull();
   });
+
+  // Regression: the first live run captured these from real ranch sites.
+  it("rejects theme-placeholder emails (user@domain.com)", () => {
+    const s = extractSignals('<html><body>Contact: user@domain.com</body></html>', "https://x.com");
+    expect(s.email).toBeNull();
+  });
+
+  it("ignores emails buried in markup the visitor never sees", () => {
+    const html = `<html><head><style>/* Font by impallari@gmail.com */</style>
+      <!-- built by dev@agency.com --></head>
+      <body>Reach us at <a href="mailto:gary@searleranch.com">email</a></body></html>`;
+    const s = extractSignals(html, "https://searleranch.com");
+    expect(s.email).toBe("gary@searleranch.com");
+    const noVisible = extractSignals(
+      '<html><head><style>/* impallari@gmail.com */</style></head><body>howdy partner</body></html>',
+      "https://x.com",
+    );
+    expect(noVisible.email).toBeNull();
+  });
+
+  it("rejects the xmlns fbml namespace and FB plumbing as social URLs", () => {
+    const s = extractSignals(
+      '<html xmlns:fb="http://www.facebook.com/2008/fbml"><body><img src="https://facebook.com/tr?id=1"></body></html>',
+      "https://x.com",
+    );
+    expect(s.social_url).toBeNull();
+    const real = extractSignals(
+      '<html xmlns:fb="http://www.facebook.com/2008/fbml"><body><a href="https://facebook.com/beckranchwy">FB</a></body></html>',
+      "https://x.com",
+    );
+    expect(real.social_url).toContain("facebook.com/beckranchwy");
+  });
 });

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/server";
+import { formatUtc } from "@/lib/utils";
 import { canRunSource } from "../../../../../agents/lib/discovery.mjs";
 import {
   approveSourceAction, setSourceEnabledAction, runDiscoveryAction,
@@ -15,9 +16,7 @@ import {
 export const metadata: Metadata = { title: "Admin · Discovery Command Center" };
 export const dynamic = "force-dynamic";
 
-function fmt(ts: string | null) {
-  return ts ? new Date(ts).toLocaleString() : "—";
-}
+const fmt = formatUtc;
 function Hidden({ name, value }: { name: string; value: string }) {
   return <input type="hidden" name={name} value={value} />;
 }

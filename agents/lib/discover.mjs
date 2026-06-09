@@ -30,10 +30,31 @@ export function robotsAllows(robotsTxt, path) {
 
 const RE = {
   email: /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g,
+  mailto: /mailto:([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/gi,
   phone: /(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g,
-  fb: /https?:\/\/(?:www\.)?facebook\.com\/[A-Za-z0-9._/-]+/i,
-  ig: /https?:\/\/(?:www\.)?instagram\.com\/[A-Za-z0-9._/-]+/i,
+  fb: /https?:\/\/(?:www\.)?facebook\.com\/[A-Za-z0-9._/-]+/gi,
+  ig: /https?:\/\/(?:www\.)?instagram\.com\/[A-Za-z0-9._/-]+/gi,
 };
+// Placeholder/template emails that show up in off-the-shelf themes — never a
+// real contact (seen in the wild: user@domain.com, font-license credits).
+const FAKE_EMAIL = /(@(?:domain|example|email|mysite|yoursite|website|sentry|wixpress)\.|^(?:user|name|email|test|someone|youremail|info@example)@|\.(png|jpg|jpeg|webp|gif|svg)$)/i;
+// Facebook URLs that are markup plumbing, not pages (xmlns:fb namespace,
+// share/track/plugin endpoints).
+const FAKE_SOCIAL = /facebook\.com\/(?:2008\/fbml|plugins|sharer|share\.php|tr\b|dialog|login)/i;
+
+function pickEmail(html, visibleText) {
+  // mailto: links are explicit contact intent — most trustworthy.
+  const mailtos = [...html.matchAll(RE.mailto)].map((m) => m[1]);
+  // Otherwise only VISIBLE text — raw HTML matches pick up emails buried in
+  // comments, inline CSS, and theme/font credits the visitor never sees.
+  const visible = visibleText.match(RE.email) || [];
+  return [...mailtos, ...visible].find((e) => !FAKE_EMAIL.test(e)) ?? null;
+}
+
+function pickSocial(html) {
+  const hits = [...(html.match(RE.fb) || []), ...(html.match(RE.ig) || [])];
+  return hits.find((u) => !FAKE_SOCIAL.test(u)) ?? null;
+}
 const STATE_ABBR = ["CO","WY","UT","OK","MT","TX","KS","NE","SD","NM","ID","NV","AZ","ND","IA","MO","AR"];
 const STATE_NAMES = { colorado:"CO", wyoming:"WY", utah:"UT", oklahoma:"OK", montana:"MT", texas:"TX", kansas:"KS", nebraska:"NE", "south dakota":"SD" };
 
@@ -46,7 +67,7 @@ function stripTags(html) {
 export function extractSignals(html, url = "") {
   const text = stripTags(html);
   const low = text.toLowerCase();
-  const emails = [...new Set((html.match(RE.email) || []).filter((e) => !/\.(png|jpg|jpeg|webp|gif|svg)$/i.test(e) && !/(example|sentry|wixpress|\.png)/i.test(e)))];
+  const email = pickEmail(html, text);
   const phones = [...new Set((text.match(RE.phone) || []))];
   const imgCount = (html.match(/<img\b/gi) || []).length;
 
@@ -62,9 +83,9 @@ export function extractSignals(html, url = "") {
   const has = (re) => re.test(low);
   return {
     business_name: title.split(/[|\-–—·]/)[0].trim() || null,
-    email: emails[0] ?? null,
+    email,
     phone: phones[0] ?? null,
-    social_url: (html.match(RE.fb)?.[0] || html.match(RE.ig)?.[0] || null),
+    social_url: pickSocial(html),
     state,
     website: url || null,
     sells_beef: has(/freezer beef|beef box|quarter (?:beef|of beef)|half (?:beef|of beef)|whole beef|grass[- ]?fed beef|beef for sale|beef bundle|hanging weight/),
@@ -74,7 +95,7 @@ export function extractSignals(html, url = "") {
     owner_operated: has(/family (?:owned|run|operated)|since \d{4}|fourth[- ]generation|generations? of/),
     // Heuristic only — flag a likely-weak site (no responsive meta or very thin).
     weak_website: !/name=["']viewport["']/i.test(html) || text.replace(/\s+/g, " ").length < 600,
-    found_emails: emails.length,
+    found_emails: email ? 1 : 0,
   };
 }
 
